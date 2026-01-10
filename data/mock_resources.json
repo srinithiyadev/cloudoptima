@@ -1,0 +1,38 @@
+{
+  "scan_time": "2024-03-15T10:30:00Z",
+  "instances": [
+    {
+      "id": "i-12345",
+      "name": "Development Server",
+      "status": "idle",
+      "cpu": "3%",
+      "cost": "$18/month",
+      "cloud": "aws"
+    },
+    {
+      "id": "i-67890",
+      "name": "API Backend",
+      "status": "active",
+      "cpu": "78%",
+      "cost": "$42/month",
+      "cloud": "aws"
+    },
+    {
+      "id": "vm-azure-001",
+      "name": "PostgreSQL Database",
+      "status": "idle",
+      "cpu": "5%",
+      "cost": "$65/month",
+      "cloud": "azure"
+    },
+    {
+      "id": "gcp-instance-01",
+      "name": "Data Analytics VM",
+      "status": "active",
+      "cpu": "92%",
+      "cost": "$88/month",
+      "cloud": "gcp"
+    }
+  ],
+  "total_savings": "$83/month"
+}

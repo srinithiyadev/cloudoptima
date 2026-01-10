@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CloudOptima Dashboard</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <h1><i class="fas fa-cloud"></i> CloudOptima Dashboard</h1>
+            <div class="header-info">
+                <p><i class="fas fa-clock"></i> Last scan: <span id="last-scan">{{ last_scan }}</span></p>
+                <button onclick="runScan()" class="btn-scan">
+                    <i class="fas fa-sync-alt"></i> Run Scan
+                </button>
+            </div>
+        </header>
+
+        <!-- Summary Cards -->
+        <div class="summary-cards">
+            <div class="card">
+                <h3><i class="fas fa-server"></i> Total Resources</h3>
+                <p class="big-number" id="total-resources">0</p>
+            </div>
+            <div class="card">
+                <h3><i class="fas fa-bed"></i> Idle Resources</h3>
+                <p class="big-number" id="idle-resources">0</p>
+            </div>
+            <div class="card highlight">
+                <h3><i class="fas fa-money-bill-wave"></i> Potential Savings</h3>
+                <p class="big-number">{{ savings }}</p>
+            </div>
+        </div>
+
+        <!-- Resources Table -->
+        <div class="table-section">
+            <h2><i class="fas fa-list"></i> Cloud Resources</h2>
+            <table id="resources-table">
+                <thead>
+                    <tr>
+                        <th>Resource ID</th>
+                        <th>Name</th>
+                        <th>Cloud</th>
+                        <th>Status</th>
+                        <th>CPU Usage</th>
+                        <th>Monthly Cost</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for instance in instances %}
+                    <tr>
+                        <td>{{ instance.id }}</td>
+                        <td>{{ instance.name }}</td>
+                        <td><span class="cloud-badge {{ instance.cloud }}">{{ instance.cloud|upper }}</span></td>
+                        <td>
+                            <span class="status-badge {{ instance.status }}">
+                                {{ instance.status|upper }}
+                            </span>
+                        </td>
+                        <td>{{ instance.cpu }}</td>
+                        <td>{{ instance.cost }}</td>
+                        <td>
+                            {% if instance.status == 'idle' %}
+                            <button class="btn-action" onclick="sendAlert('{{ instance.id }}')">
+                                <i class="fas fa-bell"></i> Alert
+                            </button>
+                            {% else %}
+                            <span class="text-muted">No action</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Footer -->
+        <footer>
+            <p>CloudOptima &copy; 2024 | Multi-Cloud Cost Optimization Tool</p>
+            <p class="footer-info">
+                <i class="fas fa-info-circle"></i> 
+                Click "Alert" to notify team about idle resources
+            </p>
+        </footer>
+    </div>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>
