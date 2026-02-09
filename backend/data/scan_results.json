@@ -1,0 +1,53 @@
+{
+  "scan_time": "2026-02-09T07:03:02.934407",
+  "resources": [
+    {
+      "id": "i-16305",
+      "name": "App-Server",
+      "cloud": "gcp",
+      "status": "active",
+      "cpu": "81%",
+      "cost": "$75/month",
+      "region": "eastus"
+    },
+    {
+      "id": "i-10825",
+      "name": "App-Server",
+      "cloud": "aws",
+      "status": "idle",
+      "cpu": "4%",
+      "cost": "$127/month",
+      "region": "westeurope"
+    },
+    {
+      "id": "i-64464",
+      "name": "Web-Server",
+      "cloud": "gcp",
+      "status": "idle",
+      "cpu": "3%",
+      "cost": "$145/month",
+      "region": "eastus"
+    },
+    {
+      "id": "i-99872",
+      "name": "API-Server",
+      "cloud": "aws",
+      "status": "idle",
+      "cpu": "1%",
+      "cost": "$88/month",
+      "region": "us-west-2"
+    },
+    {
+      "id": "i-51826",
+      "name": "DB-Server",
+      "cloud": "aws",
+      "status": "active",
+      "cpu": "61%",
+      "cost": "$122/month",
+      "region": "westeurope"
+    }
+  ],
+  "total_savings": "$360/month",
+  "idle_count": 3,
+  "total_count": 5
+}

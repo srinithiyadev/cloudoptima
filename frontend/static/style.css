@@ -217,3 +217,90 @@ footer {
     justify-content: center;
     gap: 8px;
 }
+/* AWS Connection Panel */
+.aws-connect-card {
+    background: #f8f9fa;
+    border: 2px dashed #007bff;
+    border-radius: 10px;
+    padding: 20px;
+    margin: 20px 0;
+    text-align: center;
+}
+
+.aws-inputs {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin: 15px 0;
+    flex-wrap: wrap;
+}
+
+.aws-inputs input {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    width: 300px;
+    max-width: 100%;
+}
+
+.btn-connect {
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.btn-demo {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-left: 10px;
+}
+
+/* Cloud Tabs */
+.cloud-tabs {
+    display: flex;
+    gap: 10px;
+    margin: 20px 0;
+    justify-content: center;
+}
+
+.tab-btn {
+    padding: 10px 20px;
+    border: 2px solid #007bff;
+    background: white;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.tab-btn.active {
+    background: #007bff;
+    color: white;
+}
+
+/* Chart */
+.chart-section {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    margin: 20px 0;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .aws-inputs {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .aws-inputs input {
+        width: 100%;
+    }
+}

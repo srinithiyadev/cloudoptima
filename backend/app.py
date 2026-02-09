@@ -1,10 +1,16 @@
 from flask import Flask, render_template, jsonify, request
 import json
-import scanner  # Your scanner module
+import scanner
 from datetime import datetime
 import os
+from aws_api import aws_bp  # Import AWS API blueprint
 
-app = Flask(__name__)
+app = Flask(__name__, 
+            template_folder='../frontend/templates',
+            static_folder='../frontend/static')
+
+# Register AWS API routes
+app.register_blueprint(aws_bp, url_prefix='/api/aws')
 
 def load_scan_data():
     """Load scan results from file"""
