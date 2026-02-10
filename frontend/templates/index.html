@@ -14,7 +14,7 @@
         <header>
             <h1><i class="fas fa-cloud"></i> CloudOptima Dashboard</h1>
             <div class="header-info">
-                <p><i class="fas fa-clock"></i> Last scan: <span id="last-scan">{{ last_scan }}</span></p>
+                <p><i class="fas fa-clock"></i> Last scan: <span id="last-scan">Just now</span></p>
                 <button onclick="runScan()" class="btn-scan">
                     <i class="fas fa-sync-alt"></i> Run Scan
                 </button>
@@ -44,15 +44,15 @@
         <div class="summary-cards">
             <div class="card">
                 <h3><i class="fas fa-server"></i> Total Resources</h3>
-                <p class="big-number" id="total-resources">0</p>
+                <p class="big-number" id="total-resources">12</p>
             </div>
             <div class="card">
                 <h3><i class="fas fa-bed"></i> Idle Resources</h3>
-                <p class="big-number" id="idle-resources">0</p>
+                <p class="big-number" id="idle-resources">3</p>
             </div>
             <div class="card highlight">
                 <h3><i class="fas fa-money-bill-wave"></i> Monthly Cost</h3>
-                <p class="big-number" id="monthly-cost">{{ savings }}</p>
+                <p class="big-number" id="monthly-cost">$1,250</p>
                 <p class="cost-source" id="cost-source">(Demo Data)</p>
             </div>
         </div>
@@ -92,29 +92,7 @@
                     </tr>
                 </thead>
                 <tbody id="resources-body">
-                    {% for instance in instances %}
-                    <tr>
-                        <td>{{ instance.id }}</td>
-                        <td>{{ instance.name }}</td>
-                        <td><span class="cloud-badge {{ instance.cloud }}">{{ instance.cloud|upper }}</span></td>
-                        <td>
-                            <span class="status-badge {{ instance.status }}">
-                                {{ instance.status|upper }}
-                            </span>
-                        </td>
-                        <td>{{ instance.cpu }}</td>
-                        <td>{{ instance.cost }}</td>
-                        <td>
-                            {% if instance.status == 'idle' %}
-                            <button class="btn-action" onclick="sendAlert('{{ instance.id }}')">
-                                <i class="fas fa-bell"></i> Alert
-                            </button>
-                            {% else %}
-                            <span class="text-muted">No action</span>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
+                    <!-- Demo data will be loaded by JavaScript -->
                 </tbody>
             </table>
         </div>
@@ -130,6 +108,43 @@
     </div>
 
     <script>
+        // Demo data
+        const demoInstances = [
+            {id: 'i-0abc123def456', name: 'Web Server', cloud: 'aws', status: 'running', days: '45', cost: '$85'},
+            {id: 'i-1def456ghi789', name: 'Database', cloud: 'aws', status: 'idle', days: '120', cost: '$120'},
+            {id: 'vm-prod-app-01', name: 'App Server', cloud: 'azure', status: 'running', days: '30', cost: '$95'},
+            {id: 'vm-dev-test-02', name: 'Test VM', cloud: 'azure', status: 'idle', days: '90', cost: '$65'},
+            {id: 'gcp-instance-1', name: 'Kubernetes Node', cloud: 'gcp', status: 'running', days: '15', cost: '$110'},
+            {id: 'gcp-instance-2', name: 'Backup Server', cloud: 'gcp', status: 'idle', days: '200', cost: '$75'}
+        ];
+
+        // Load demo data on page load
+        function loadDemoData() {
+            const tableBody = document.getElementById('resources-body');
+            tableBody.innerHTML = '';
+            
+            demoInstances.forEach(instance => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${instance.id}</td>
+                    <td>${instance.name}</td>
+                    <td><span class="cloud-badge ${instance.cloud}">${instance.cloud.toUpperCase()}</span></td>
+                    <td><span class="status-badge ${instance.status}">${instance.status.toUpperCase()}</span></td>
+                    <td>${instance.days} days</td>
+                    <td>${instance.cost}/month</td>
+                    <td>
+                        ${instance.status === 'idle' ? 
+                            `<button class="btn-action" onclick="sendAlert('${instance.id}')">
+                                <i class="fas fa-bell"></i> Alert
+                            </button>` : 
+                            `<span class="text-muted">No action</span>`
+                        }
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
         // Chart for cost visualization
         const ctx = document.getElementById('costChart').getContext('2d');
         const costChart = new Chart(ctx, {
@@ -195,7 +210,7 @@
                 
                 // Update dashboard with real data
                 document.getElementById('monthly-cost').innerText = 
-                    costData.total_cost || '0';
+                    '$' + (costData.total_cost || '0');
                 document.getElementById('cost-source').innerText = '(Real AWS Data)';
                 document.getElementById('data-source').innerText = '(Real AWS Instances)';
                 
@@ -273,7 +288,7 @@
                 btn.style.background = '#007bff';
                 document.getElementById('cost-source').innerText = '(Demo Data)';
                 document.getElementById('data-source').innerText = '(Demo Data)';
-                location.reload(); // Reload to show demo data
+                loadDemoData(); // Reload demo data
             }
         }
 
@@ -281,25 +296,21 @@
         function showCloud(cloud) {
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
-            // Filter table by cloud (to implement)
+            // Filter table by cloud
             console.log('Showing:', cloud);
         }
 
         // Existing functions
         function runScan() {
-            fetch('/api/scan', {method: 'POST'})
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        alert(`Scan complete: ${data.message}`);
-                        location.reload();
-                    }
-                });
+            alert('Scan feature requires backend connection. Use "Connect AWS" for real scan.');
         }
 
         function sendAlert(resourceId) {
             alert(`Alert sent to team for resource: ${resourceId}`);
         }
+
+        // Load demo data on page load
+        document.addEventListener('DOMContentLoaded', loadDemoData);
     </script>
 </body>
 </html>
