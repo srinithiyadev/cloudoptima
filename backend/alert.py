@@ -22,4 +22,4 @@ def send_alert():
         })
         
     except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 500
+        return jsonify({'success': False, 'error': str(e)}), 500# Alert endpoint added
