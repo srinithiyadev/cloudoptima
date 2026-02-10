@@ -1,8 +1,10 @@
 from flask import Flask, jsonify
 from alert import alert_bp
+from flask_cors import CORS
 from aws_api import aws_bp
 import os
 
+CORS(app)
 app = Flask(__name__)
 
 # Register API routes
