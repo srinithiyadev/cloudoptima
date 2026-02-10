@@ -34,9 +34,15 @@
                 <button onclick="connectAWS()" class="btn-connect">
                     <i class="fas fa-plug"></i> Connect AWS
                 </button>
+                <button onclick="disconnectAWS()" class="btn-disconnect" style="background:#dc3545;display:none;">
+                    <i class="fas fa-unlink"></i> Disconnect
+                </button>
             </div>
             <p class="small-note">
                 <i class="fas fa-shield-alt"></i> Keys are used temporarily and never stored
+            </p>
+            <p id="refresh-status" class="small-note" style="display:none;">
+                <i class="fas fa-sync-alt"></i> Auto-refresh: <span id="refresh-timer">5:00</span>
             </p>
         </div>
 
@@ -118,6 +124,12 @@
             {id: 'gcp-instance-2', name: 'Backup Server', cloud: 'gcp', status: 'idle', days: '200', cost: '$75'}
         ];
 
+        // Auto-refresh variables
+        let autoRefreshInterval = null;
+        let refreshTimerInterval = null;
+        let timeLeft = 300; // 5 minutes in seconds
+        let isAWSConnected = false;
+
         // Load demo data on page load
         function loadDemoData() {
             const tableBody = document.getElementById('resources-body');
@@ -167,7 +179,7 @@
             }
         });
 
-        // AWS Connection - FIXED VERSION
+        // AWS Connection
         async function connectAWS() {
             const key = document.getElementById('aws-key').value.trim();
             const secret = document.getElementById('aws-secret').value.trim();
@@ -260,7 +272,15 @@
                 // Update resources table with AWS instances
                 updateResourcesTable(instancesData.idle_instances);
                 
-                alert('✅ AWS connected successfully! Found ' + (instancesData.total_instances || '0') + ' idle instances.');
+                // Show success and enable auto-refresh
+                alert('✅ AWS connected successfully! Auto-refresh enabled (5 minutes).');
+                
+                // Enable auto-refresh
+                isAWSConnected = true;
+                document.querySelector('.btn-connect').style.display = 'none';
+                document.querySelector('.btn-disconnect').style.display = 'inline-block';
+                document.getElementById('refresh-status').style.display = 'block';
+                startAutoRefresh();
                 
             } catch (error) {
                 console.error('Full error:', error);
@@ -268,6 +288,91 @@
             } finally {
                 connectBtn.innerHTML = '<i class="fas fa-plug"></i> Connect AWS';
                 connectBtn.disabled = false;
+            }
+        }
+
+        // Disconnect AWS
+        function disconnectAWS() {
+            isAWSConnected = false;
+            stopAutoRefresh();
+            document.querySelector('.btn-connect').style.display = 'inline-block';
+            document.querySelector('.btn-disconnect').style.display = 'none';
+            document.getElementById('refresh-status').style.display = 'none';
+            document.getElementById('cost-source').innerText = '(Demo Data)';
+            document.getElementById('data-source').innerText = '(Demo Data)';
+            loadDemoData();
+            alert('🔌 AWS disconnected. Auto-refresh stopped.');
+        }
+
+        // Auto-refresh functions
+        function startAutoRefresh() {
+            stopAutoRefresh(); // Clear any existing intervals
+            timeLeft = 300; // Reset to 5 minutes
+            
+            // Update timer every second
+            refreshTimerInterval = setInterval(() => {
+                timeLeft--;
+                const minutes = Math.floor(timeLeft / 60);
+                const seconds = timeLeft % 60;
+                document.getElementById('refresh-timer').innerText = 
+                    `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                
+                if (timeLeft <= 0) {
+                    refreshAWSData();
+                    timeLeft = 300; // Reset timer
+                }
+            }, 1000);
+            
+            // First refresh
+            refreshAWSData();
+            console.log('✅ Auto-refresh enabled (every 5 minutes)');
+        }
+        
+        function stopAutoRefresh() {
+            if (refreshTimerInterval) {
+                clearInterval(refreshTimerInterval);
+                refreshTimerInterval = null;
+            }
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+                autoRefreshInterval = null;
+            }
+            console.log('⏹️ Auto-refresh disabled');
+        }
+        
+        async function refreshAWSData() {
+            const key = document.getElementById('aws-key').value.trim();
+            const secret = document.getElementById('aws-secret').value.trim();
+            
+            if (!key || !secret || !isAWSConnected) return;
+            
+            try {
+                console.log('🔄 Auto-refreshing AWS data...');
+                
+                // Refresh cost data
+                const costResponse = await fetch('https://cloudoptima.onrender.com/api/aws/cost', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({accessKeyId: key, secretAccessKey: secret})
+                });
+                
+                if (!costResponse.ok) return;
+                
+                const costData = await costResponse.json();
+                if (costData.error) return;
+                
+                // Silent update of chart
+                costChart.data.labels = costData.daily_costs?.map(d => d.date.substring(5)) || [];
+                costChart.data.datasets[0].data = costData.daily_costs?.map(d => parseFloat(d.cost)) || [];
+                costChart.update();
+                
+                // Update last scan time
+                document.getElementById('last-scan').innerText = new Date().toLocaleTimeString();
+                
+                console.log('✅ Auto-refresh completed');
+                
+            } catch (error) {
+                console.log('Auto-refresh failed:', error.message);
             }
         }
 
@@ -315,11 +420,15 @@
                 btn.innerHTML = '<i class="fas fa-database"></i> Demo Mode: OFF';
                 btn.style.background = '#28a745';
                 document.getElementById('cost-source').innerText = '(Real AWS Data)';
+                if (isAWSConnected) {
+                    startAutoRefresh();
+                }
             } else {
                 btn.innerHTML = '<i class="fas fa-play-circle"></i> Demo Mode: ON';
                 btn.style.background = '#007bff';
                 document.getElementById('cost-source').innerText = '(Demo Data)';
                 document.getElementById('data-source').innerText = '(Demo Data)';
+                stopAutoRefresh();
                 loadDemoData(); // Reload demo data
             }
         }
