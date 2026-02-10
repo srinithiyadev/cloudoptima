@@ -168,7 +168,7 @@
             
             try {
                 // 1. Fetch cost data
-                const costResponse = await fetch('/api/aws/cost', {
+                const costResponse = await fetch('https://cloudoptima.onrender.com/api/aws/cost', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({
@@ -181,7 +181,7 @@
                 if (costData.error) throw new Error(costData.error);
                 
                 // 2. Fetch AWS instances
-                const instancesResponse = await fetch('/api/aws/instances', {
+                const instancesResponse = await fetch('https://cloudoptima.onrender.com/api/aws/instances', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({
