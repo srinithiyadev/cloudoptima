@@ -167,10 +167,12 @@
             }
         });
 
-        // AWS Connection
+        // AWS Connection - FIXED VERSION
         async function connectAWS() {
-            const key = document.getElementById('aws-key').value;
-            const secret = document.getElementById('aws-secret').value;
+            const key = document.getElementById('aws-key').value.trim();
+            const secret = document.getElementById('aws-secret').value.trim();
+            
+            console.log('Connecting with key:', key.substring(0, 8) + '...');
             
             if (!key || !secret) {
                 alert('Please enter AWS Access Key and Secret Key');
@@ -183,30 +185,60 @@
             
             try {
                 // 1. Fetch cost data
+                console.log('Fetching cost data...');
                 const costResponse = await fetch('https://cloudoptima.onrender.com/api/aws/cost', {
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
                     body: JSON.stringify({
                         accessKeyId: key,
                         secretAccessKey: secret
                     })
                 });
+                
+                console.log('Cost response status:', costResponse.status);
+                
+                if (!costResponse.ok) {
+                    const errorText = await costResponse.text();
+                    throw new Error(`HTTP ${costResponse.status}: ${errorText.substring(0, 100)}`);
+                }
                 
                 const costData = await costResponse.json();
-                if (costData.error) throw new Error(costData.error);
+                console.log('Cost data received:', costData);
+                
+                if (costData.error) {
+                    throw new Error(`AWS Error: ${costData.error}`);
+                }
                 
                 // 2. Fetch AWS instances
+                console.log('Fetching instances...');
                 const instancesResponse = await fetch('https://cloudoptima.onrender.com/api/aws/instances', {
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
                     body: JSON.stringify({
                         accessKeyId: key,
                         secretAccessKey: secret
                     })
                 });
                 
+                console.log('Instances response status:', instancesResponse.status);
+                
+                if (!instancesResponse.ok) {
+                    const errorText = await instancesResponse.text();
+                    throw new Error(`HTTP ${instancesResponse.status}: ${errorText.substring(0, 100)}`);
+                }
+                
                 const instancesData = await instancesResponse.json();
-                if (instancesData.error) throw new Error(instancesData.error);
+                console.log('Instances data:', instancesData);
+                
+                if (instancesData.error) {
+                    throw new Error(`AWS Error: ${instancesData.error}`);
+                }
                 
                 // Update dashboard with real data
                 document.getElementById('monthly-cost').innerText = 
@@ -228,10 +260,10 @@
                 // Update resources table with AWS instances
                 updateResourcesTable(instancesData.idle_instances);
                 
-                alert('✅ AWS connected! Found ' + instancesData.total_instances + ' idle instances.');
+                alert('✅ AWS connected successfully! Found ' + (instancesData.total_instances || '0') + ' idle instances.');
                 
             } catch (error) {
-                console.error(error);
+                console.error('Full error:', error);
                 alert('❌ Failed to connect AWS: ' + error.message);
             } finally {
                 connectBtn.innerHTML = '<i class="fas fa-plug"></i> Connect AWS';
@@ -306,26 +338,26 @@
         }
 
         function sendAlert(resourceId) {
-    const email = prompt('Enter email for alerts:', 'team@yourcompany.com');
-    if (!email) return;
-    
-    fetch('https://cloudoptima.onrender.com/api/alert/send', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-            resource_id: resourceId,
-            email: email
-        })
-    })
-    .then(res => res.json())
-    .then(data => {
-        alert(`✅ ${data.message}`);
-    })
-    .catch(error => {
-        alert('❌ Alert service unavailable. Using demo mode.');
-        console.log('Demo alert for:', resourceId);
-    });
-}
+            const email = prompt('Enter email for alerts:', 'team@yourcompany.com');
+            if (!email) return;
+            
+            fetch('https://cloudoptima.onrender.com/api/alert/send', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    resource_id: resourceId,
+                    email: email
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                alert(`✅ ${data.message}`);
+            })
+            .catch(error => {
+                alert('❌ Alert service unavailable. Using demo mode.');
+                console.log('Demo alert for:', resourceId);
+            });
+        }
 
         // Load demo data on page load
         document.addEventListener('DOMContentLoaded', loadDemoData);
