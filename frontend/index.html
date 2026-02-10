@@ -306,8 +306,26 @@
         }
 
         function sendAlert(resourceId) {
-            alert(`Alert sent to team for resource: ${resourceId}`);
-        }
+    const email = prompt('Enter email for alerts:', 'team@yourcompany.com');
+    if (!email) return;
+    
+    fetch('https://cloudoptima.onrender.com/api/alert/send', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            resource_id: resourceId,
+            email: email
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        alert(`✅ ${data.message}`);
+    })
+    .catch(error => {
+        alert('❌ Alert service unavailable. Using demo mode.');
+        console.log('Demo alert for:', resourceId);
+    });
+}
 
         // Load demo data on page load
         document.addEventListener('DOMContentLoaded', loadDemoData);

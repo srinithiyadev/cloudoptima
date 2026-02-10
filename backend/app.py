@@ -2,6 +2,7 @@ from flask import Flask, render_template, jsonify, request
 import json
 import scanner
 from datetime import datetime
+from alert import alert_bp
 import os
 from aws_api import aws_bp  # Import AWS API blueprint
 
@@ -11,6 +12,7 @@ app = Flask(__name__,
 
 # Register AWS API routes
 app.register_blueprint(aws_bp, url_prefix='/api/aws')
+app.register_blueprint(alert_bp, url_prefix='/api/alert')
 
 def load_scan_data():
     """Load scan results from file"""
