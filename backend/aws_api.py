@@ -77,7 +77,7 @@ def get_cost():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# Idle EC2 Detection
+# Idle EC2 Detection - FIXED VERSION
 @aws_bp.route('/instances', methods=['POST'])
 def get_instances():
     try:
@@ -85,40 +85,65 @@ def get_instances():
         access_key = data.get('accessKeyId')
         secret_key = data.get('secretAccessKey')
         
+        if not access_key or not secret_key:
+            return jsonify({'error': 'AWS credentials missing'}), 400
+        
+        # Force us-east-1 (your instance region)
         ec2 = boto3.client('ec2',
             aws_access_key_id=access_key,
             aws_secret_access_key=secret_key,
             region_name='us-east-1'
         )
         
-        # Get all running instances
-        instances = ec2.describe_instances(Filters=[
-            {'Name': 'instance-state-name', 'Values': ['running']}
-        ])
+        # IMPORTANT FIX: Remove filter to get ALL instances first
+        instances = ec2.describe_instances()
         
+        all_instances = []
         idle_instances = []
+        
         for reservation in instances['Reservations']:
             for instance in reservation['Instances']:
-                # Simple idle detection: running >7 days
+                instance_id = instance['InstanceId']
+                instance_state = instance['State']['Name']
+                instance_type = instance['InstanceType']
                 launch_time = instance['LaunchTime']
                 days_running = (datetime.now(launch_time.tzinfo) - launch_time).days
                 
-                if days_running > 7:
-                    idle_instances.append({
-                        'id': instance['InstanceId'],
-                        'type': instance['InstanceType'],
-                        'launched': launch_time.strftime('%Y-%m-%d'),
-                        'days_running': days_running,
-                        'name': next((tag['Value'] for tag in instance.get('Tags', []) 
-                                    if tag['Key'] == 'Name'), 'No Name'),
-                        'state': 'idle'
-                    })
+                # Get Name tag
+                instance_name = 'No Name'
+                if 'Tags' in instance:
+                    for tag in instance['Tags']:
+                        if tag['Key'] == 'Name':
+                            instance_name = tag['Value']
+                            break
+                
+                instance_data = {
+                    'id': instance_id,
+                    'name': instance_name,
+                    'type': instance_type,
+                    'state': instance_state,
+                    'launched': launch_time.strftime('%Y-%m-%d'),
+                    'days_running': days_running,
+                    'region': 'us-east-1'
+                }
+                
+                all_instances.append(instance_data)
+                
+                # Idle detection: running > 7 days
+                if instance_state == 'running' and days_running > 7:
+                    idle_instances.append(instance_data)
+        
+        # Debug log (visible in Render logs)
+        print(f"🔍 Found {len(all_instances)} total instances, {len(idle_instances)} idle instances")
         
         return jsonify({
+            'instances': all_instances,  # Send ALL instances for debugging
             'idle_instances': idle_instances,
-            'total_instances': len(idle_instances),
-            'estimated_savings': len(idle_instances) * 50  # $50/month per instance
+            'total_instances': len(all_instances),
+            'idle_count': len(idle_instances),
+            'estimated_savings': len(idle_instances) * 50
         })
         
     except Exception as e:
+        print(f"❌ Error in get_instances: {str(e)}")
         return jsonify({'error': str(e)}), 500
