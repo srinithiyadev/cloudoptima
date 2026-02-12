@@ -1,10 +1,10 @@
+import os
 import sib_api_v3_sdk
 from sib_api_v3_sdk.rest import ApiException
 
 # Configure API key - PASTE YOUR BREVO API KEY HERE
 configuration = sib_api_v3_sdk.Configuration()
-configuration.api_key['api-key'] = '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'
-
+configuration.api_key['api-key'] = os.environ.get('BREVO_API_KEY', '')  # ✅ READ FROM ENV
 api_instance = sib_api_v3_sdk.TransactionalEmailsApi(sib_api_v3_sdk.ApiClient(configuration))
 
 def send_test_alert():
