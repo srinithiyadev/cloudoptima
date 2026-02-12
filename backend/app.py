@@ -7,8 +7,6 @@ import os
 app = Flask(__name__)
 CORS(app)
 
-app.register_blueprint(aws_bp, url_prefix='/api/aws')
-app.register_blueprint(alert_bp, url_prefix='/api/alert')
 
 @app.route('/health')
 def health_check():

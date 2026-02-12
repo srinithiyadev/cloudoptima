@@ -76,3 +76,19 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }, 60000);
 });
+// Logout function
+function logout() {
+    localStorage.removeItem('demo_mode');
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = '/login.html';
+}
+
+// Show user email on dashboard
+document.addEventListener('DOMContentLoaded', function() {
+    const user = JSON.parse(localStorage.getItem('user') || '{"email":"demo@cloudoptima.com"}');
+    const userEmailElement = document.getElementById('userEmailText');
+    if (userEmailElement) {
+        userEmailElement.textContent = user.email;
+    }
+});
