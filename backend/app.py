@@ -3,6 +3,8 @@ from flask_cors import CORS
 from alert import alert_bp
 from aws_api import aws_bp
 import os
+from routes.test_email import test_bp    # ← IMPORT THE BLUEPRINT
+app.register_blueprint(test_bp)          # ← REGISTER THE BLUEPRINT
 
 app = Flask(__name__)
 CORS(app)
