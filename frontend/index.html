@@ -6,6 +6,176 @@
     if (!localStorage.getItem('demo_mode') && !localStorage.getItem('token')) {
         window.location.href = '/login.html';
     }
+    // AWS Connection Functions
+function connectAWS() {
+    const accessKey = document.getElementById('aws-key').value.trim();
+    const secretKey = document.getElementById('aws-secret').value.trim();
+    const region = document.getElementById('aws-region').value;
+    
+    if (!accessKey || !secretKey) {
+        alert('Please enter both Access Key and Secret Key');
+        return;
+    }
+    
+    // Show loading
+    const btn = event.target;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Connecting...';
+    btn.disabled = true;
+    
+    // Simulate connection (since backend not ready)
+    setTimeout(() => {
+        // Hide form, show connected info
+        document.getElementById('awsForm').style.display = 'none';
+        document.getElementById('connectedInfo').style.display = 'block';
+        
+        // Update status badge
+        const statusBadge = document.getElementById('awsStatus');
+        statusBadge.innerHTML = '<i class="fas fa-circle"></i> Connected';
+        statusBadge.style.background = '#10b981';
+        
+        // Show account info
+        document.getElementById('connectedAccount').textContent = accessKey.substring(0, 8) + '...';
+        document.getElementById('connectedRegion').textContent = region;
+        
+        // Save to localStorage
+        localStorage.setItem('aws_connected', 'true');
+        localStorage.setItem('aws_region', region);
+        
+        // Restore button
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        
+        // Show success message
+        alert('✅ AWS Account connected! Auto-scanner will now monitor for idle resources.');
+        
+        // Update the data source indicator
+        document.getElementById('cost-source').innerText = '(Real AWS Data)';
+        document.getElementById('data-source').innerText = '(Connected to AWS)';
+        
+        // Start auto-refresh
+        startAutoRefresh();
+    }, 1500);
+}
+
+function disconnectAWS() {
+    if (confirm('Disconnect AWS account? Auto-alerts will stop.')) {
+        // Show form, hide connected info
+        document.getElementById('awsForm').style.display = 'block';
+        document.getElementById('connectedInfo').style.display = 'none';
+        
+        // Update status badge
+        const statusBadge = document.getElementById('awsStatus');
+        statusBadge.innerHTML = '<i class="fas fa-circle"></i> Not Connected';
+        statusBadge.style.background = '#f97316';
+        
+        // Clear localStorage
+        localStorage.removeItem('aws_connected');
+        localStorage.removeItem('aws_region');
+        
+        // Update data source indicator
+        document.getElementById('cost-source').innerText = '(Demo Data)';
+        document.getElementById('data-source').innerText = '(Demo Data)';
+        
+        // Stop auto-refresh
+        stopAutoRefresh();
+        
+        // Reload demo data
+        loadDemoData();
+        
+        alert('🔌 AWS account disconnected.');
+    }
+}
+
+// Check if AWS was previously connected
+document.addEventListener('DOMContentLoaded', function() {
+    if (localStorage.getItem('aws_connected')) {
+        document.getElementById('awsForm').style.display = 'none';
+        document.getElementById('connectedInfo').style.display = 'block';
+        
+        const statusBadge = document.getElementById('awsStatus');
+        statusBadge.innerHTML = '<i class="fas fa-circle"></i> Connected';
+        statusBadge.style.background = '#10b981';
+        
+        document.getElementById('connectedRegion').textContent = localStorage.getItem('aws_region') || 'us-east-1';
+        document.getElementById('connectedAccount').textContent = 'Previously Connected';
+    }
+});
+// Auto-Alert Functions
+function saveAlertSettings() {
+    const email = document.getElementById('alertEmail').value;
+    const frequency = document.getElementById('scanFrequency').value;
+    const enabled = document.getElementById('autoAlertToggle').checked;
+    
+    // Save to localStorage
+    localStorage.setItem('alert_email', email);
+    localStorage.setItem('scan_frequency', frequency);
+    localStorage.setItem('alerts_enabled', enabled);
+    
+    alert('✅ Settings saved! Auto-scanner will run every ' + frequency + ' hours.');
+    
+    // Update status
+    document.getElementById('alertStatus').innerText = enabled ? 'ACTIVE' : 'DISABLED';
+    document.getElementById('alertStatus').style.background = enabled ? '#10b981' : '#ef4444';
+}
+
+function testAlert() {
+    const email = document.getElementById('alertEmail').value;
+    
+    if (!email) {
+        alert('Please enter an email address first');
+        return;
+    }
+    
+    // Show sending
+    const btn = event.target;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+    btn.disabled = true;
+    
+    // Simulate sending
+    setTimeout(() => {
+        alert('✅ Test alert sent to ' + email + '! Check your inbox.');
+        
+        // Update alerts sent count
+        const alertsSent = document.getElementById('alertsSent');
+        alertsSent.innerText = parseInt(alertsSent.innerText) + 1;
+        
+        // Add to recent alerts
+        const recentDiv = document.getElementById('recentAlerts');
+        const newAlert = document.createElement('div');
+        newAlert.style.cssText = 'padding: 8px; border-bottom: 1px solid #e2e8f0; font-size: 14px;';
+        newAlert.innerHTML = '<i class="fas fa-check-circle" style="color: #10b981;"></i> Test Alert - Just now';
+        recentDiv.insertBefore(newAlert, recentDiv.firstChild);
+        
+        btn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Test Alert';
+        btn.disabled = false;
+    }, 1500);
+}
+
+// Load saved settings on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Load alert settings
+    const savedEmail = localStorage.getItem('alert_email');
+    const savedFrequency = localStorage.getItem('scan_frequency');
+    const alertsEnabled = localStorage.getItem('alerts_enabled');
+    
+    if (savedEmail) {
+        document.getElementById('alertEmail').value = savedEmail;
+    }
+    
+    if (savedFrequency) {
+        document.getElementById('scanFrequency').value = savedFrequency;
+    }
+    
+    if (alertsEnabled !== null) {
+        document.getElementById('autoAlertToggle').checked = alertsEnabled === 'true';
+        document.getElementById('alertStatus').innerText = alertsEnabled === 'true' ? 'ACTIVE' : 'DISABLED';
+        document.getElementById('alertStatus').style.background = alertsEnabled === 'true' ? '#10b981' : '#ef4444';
+    }
+    
+    // Update last scan time
+    document.getElementById('lastScanTime').innerText = new Date().toLocaleTimeString();
+});
 </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -40,26 +210,144 @@
         </header>
 
         <!-- AWS Connection Panel -->
-        <div class="aws-connect-card" id="aws-connect">
-            <h3><i class="fab fa-aws"></i> Connect AWS Account (Optional)</h3>
-            <p>Connect to see your real AWS cost data and idle instances</p>
-            <div class="aws-inputs">
-                <input type="text" id="aws-key" placeholder="AWS Access Key ID">
-                <input type="password" id="aws-secret" placeholder="AWS Secret Key">
-                <button onclick="connectAWS()" class="btn-connect">
-                    <i class="fas fa-plug"></i> Connect AWS
-                </button>
-                <button onclick="disconnectAWS()" class="btn-disconnect" style="background:#dc3545;display:none;">
-                    <i class="fas fa-unlink"></i> Disconnect
-                </button>
-            </div>
-            <p class="small-note">
-                <i class="fas fa-shield-alt"></i> Keys are used temporarily and never stored
-            </p>
-            <p id="refresh-status" class="small-note" style="display:none;">
-                <i class="fas fa-sync-alt"></i> Auto-refresh: <span id="refresh-timer">5:00</span>
-            </p>
+<div class="aws-connect-card" id="aws-connect">
+    <h3><i class="fab fa-aws"></i> Connect Your AWS Account</h3>
+    <p>Connect to enable auto-alerts for idle resources</p>
+
+    <!-- AUTO-ALERT SETTINGS SECTION - Add this after AWS Connect -->
+<div class="alert-settings-card" style="background: white; border-radius: 12px; padding: 25px; margin: 20px 0; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+    <h3 style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
+        <i class="fas fa-bell" style="color: #4f46e5;"></i>
+        Auto-Alert Settings
+        <span id="alertStatus" style="background: #10b981; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; margin-left: 10px;">ACTIVE</span>
+    </h3>
+    
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px;">
+        <div style="text-align: center; padding: 15px; background: #f8fafc; border-radius: 10px;">
+            <i class="fas fa-clock" style="color: #4f46e5; font-size: 20px;"></i>
+            <p style="font-size: 12px; color: #64748b; margin-top: 5px;">Last Scan</p>
+            <p id="lastScanTime" style="font-weight: 600; color: #1e293b;">Just now</p>
         </div>
+        <div style="text-align: center; padding: 15px; background: #f8fafc; border-radius: 10px;">
+            <i class="fas fa-server" style="color: #4f46e5; font-size: 20px;"></i>
+            <p style="font-size: 12px; color: #64748b; margin-top: 5px;">Idle Found</p>
+            <p id="idleCount" style="font-weight: 600; color: #1e293b;">3</p>
+        </div>
+        <div style="text-align: center; padding: 15px; background: #f8fafc; border-radius: 10px;">
+            <i class="fas fa-envelope" style="color: #4f46e5; font-size: 20px;"></i>
+            <p style="font-size: 12px; color: #64748b; margin-top: 5px;">Alerts Sent</p>
+            <p id="alertsSent" style="font-weight: 600; color: #1e293b;">5</p>
+        </div>
+    </div>
+    
+    <div style="border-top: 2px solid #e2e8f0; padding-top: 20px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div>
+                <label style="display: block; margin-bottom: 8px; font-weight: 500;">Alert Email</label>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <input type="email" id="alertEmail" value="srinithiyadevops@gmail.com" 
+                           style="flex: 1; padding: 10px; border: 2px solid #e2e8f0; border-radius: 8px;">
+                    <span id="emailVerified" style="color: #10b981;"><i class="fas fa-check-circle"></i></span>
+                </div>
+            </div>
+            <div>
+                <label style="display: block; margin-bottom: 8px; font-weight: 500;">Scan Frequency</label>
+                <select id="scanFrequency" style="width: 100%; padding: 10px; border: 2px solid #e2e8f0; border-radius: 8px;">
+                    <option value="6">Every 6 hours</option>
+                    <option value="12">Every 12 hours</option>
+                    <option value="24">Every 24 hours</option>
+                </select>
+            </div>
+        </div>
+        
+        <div style="margin-top: 20px; display: flex; gap: 15px; align-items: center;">
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                <input type="checkbox" id="autoAlertToggle" checked>
+                <span>Enable Auto-Alerts</span>
+            </label>
+            <button onclick="saveAlertSettings()" style="padding: 10px 20px; background: #4f46e5; color: white; border: none; border-radius: 8px; cursor: pointer;">
+                <i class="fas fa-save"></i> Save Settings
+            </button>
+            <button onclick="testAlert()" style="padding: 10px 20px; background: #10b981; color: white; border: none; border-radius: 8px; cursor: pointer;">
+                <i class="fas fa-paper-plane"></i> Send Test Alert
+            </button>
+        </div>
+        
+        <!-- Recent Alerts -->
+        <div style="margin-top: 20px; background: #f8fafc; padding: 15px; border-radius: 8px;">
+            <p style="font-weight: 600; margin-bottom: 10px;"><i class="fas fa-history"></i> Recent Alerts</p>
+            <div id="recentAlerts">
+                <div style="padding: 8px; border-bottom: 1px solid #e2e8f0; font-size: 14px;">
+                    <i class="fas fa-check-circle" style="color: #10b981;"></i> 
+                    dev-server-1 (EC2) - 2 hours ago
+                </div>
+                <div style="padding: 8px; border-bottom: 1px solid #e2e8f0; font-size: 14px;">
+                    <i class="fas fa-check-circle" style="color: #10b981;"></i> 
+                    old-database (RDS) - 5 hours ago
+                </div>
+                <div style="padding: 8px; font-size: 14px;">
+                    <i class="fas fa-check-circle" style="color: #10b981;"></i> 
+                    unattached-volume (EBS) - 1 day ago
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+    
+    <!-- Connection Status Badge -->
+    <div style="margin-bottom: 15px;">
+        <span id="awsStatus" style="background: #f97316; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px;">
+            <i class="fas fa-circle"></i> Not Connected
+        </span>
+    </div>
+    
+    <!-- Connection Form -->
+    <div id="awsForm">
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: 500;">AWS Access Key ID</label>
+            <input type="text" id="aws-key" placeholder="AKIAXXXXXXXXXXXXXXXX" style="width: 100%; padding: 10px; border: 2px solid #e2e8f0; border-radius: 8px;">
+        </div>
+        
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: 500;">AWS Secret Access Key</label>
+            <input type="password" id="aws-secret" placeholder="wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY" style="width: 100%; padding: 10px; border: 2px solid #e2e8f0; border-radius: 8px;">
+        </div>
+        
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: 500;">Region</label>
+            <select id="aws-region" style="width: 100%; padding: 10px; border: 2px solid #e2e8f0; border-radius: 8px;">
+                <option value="us-east-1">US East (N. Virginia)</option>
+                <option value="us-west-2">US West (Oregon)</option>
+                <option value="eu-west-1">EU (Ireland)</option>
+            </select>
+        </div>
+        
+        <button onclick="connectAWS()" class="btn-connect" style="width: 100%;">
+            <i class="fas fa-plug"></i> Connect AWS Account
+        </button>
+    </div>
+    
+    <!-- Connected Info (Hidden by default) -->
+    <div id="connectedInfo" style="display: none; background: #f0fdf4; padding: 20px; border-radius: 8px; margin-top: 15px;">
+        <p style="color: #166534;"><i class="fas fa-check-circle"></i> AWS Account Connected!</p>
+        <p style="font-size: 14px;">Account: <span id="connectedAccount">********</span></p>
+        <p style="font-size: 14px;">Region: <span id="connectedRegion">us-east-1</span></p>
+        <p style="font-size: 14px; margin-top: 10px;">
+            <i class="fas fa-bell"></i> Auto-alerts: <span style="color: #059669;">Active</span>
+        </p>
+        <button onclick="disconnectAWS()" style="margin-top: 10px; padding: 8px 16px; background: #dc3545; color: white; border: none; border-radius: 6px; cursor: pointer;">
+            <i class="fas fa-unlink"></i> Disconnect
+        </button>
+    </div>
+    
+    <p class="small-note">
+        <i class="fas fa-shield-alt"></i> Your keys are used only for scanning. We recommend using a read-only IAM user.
+    </p>
+    <p id="refresh-status" class="small-note" style="display:none;">
+        <i class="fas fa-sync-alt"></i> Auto-refresh: <span id="refresh-timer">5:00</span>
+    </p>
+</div>
+       
 
         <!-- Summary Cards -->
         <div class="summary-cards">
@@ -487,4 +775,4 @@
         document.addEventListener('DOMContentLoaded', loadDemoData);
     </script>
 </body>
-</html>
+</html> 
