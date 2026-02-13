@@ -18,3 +18,4 @@ s3transfer==0.10.0
 six==1.16.0
 urllib3==2.1.0
 werkzeug==3.0.1
+gunicorn==21.2.0
