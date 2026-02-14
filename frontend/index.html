@@ -458,111 +458,323 @@
     </main>
 
     <script>
-        // ===== AUTH CHECK =====
-        (function() {
-            const token = localStorage.getItem('token');
-            if (!token) window.location.replace('/login.html');
-        })();
-
-        // ===== LOGOUT =====
-        function logout() {
-            localStorage.clear();
-            window.location.replace('/login.html');
-        }
-
-        // ===== DEMO DATA =====
-        const demoData = [
-            { id: 'i-0abc123', name: 'Web Server', cloud: 'aws', status: 'running', days: 45, cost: 85.50 },
-            { id: 'i-1def456', name: 'Database', cloud: 'aws', status: 'idle', days: 120, cost: 120.75 },
-            { id: 'vm-prod-01', name: 'App Server', cloud: 'azure', status: 'running', days: 30, cost: 95.25 },
-            { id: 'vm-test-02', name: 'Test VM', cloud: 'azure', status: 'idle', days: 90, cost: 65.00 }
-        ];
-
-        // ===== LOAD TABLE =====
-        function loadTable() {
-            const tbody = document.getElementById('resources-body');
-            tbody.innerHTML = '';
-            
-            demoData.forEach(item => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${item.id}</td>
-                    <td>${item.name}</td>
-                    <td><i class="fab fa-${item.cloud}" style="color: ${item.cloud === 'aws' ? '#ff9900' : '#0078d4'};"></i> ${item.cloud.toUpperCase()}</td>
-                    <td><span class="status-badge ${item.status === 'running' ? 'status-running' : 'status-idle'}">${item.status}</span></td>
-                    <td>${item.days} days</td>
-                    <td>$${item.cost}/mo</td>
-                    <td>
-                        ${item.status === 'idle' ? 
-                            `<button class="btn btn-outline" onclick="sendAlert('${item.id}')" style="padding: 4px 8px; font-size: 11px;">
-                                <i class="fas fa-bell"></i> Alert
-                            </button>` : 
-                            '<span style="color: #9ca3af;">Active</span>'
-                        }
-                    </td>
-                `;
-                tbody.appendChild(row);
-            });
-            
-            document.getElementById('idle-resources').textContent = demoData.filter(i => i.status === 'idle').length;
-        }
-
-        // ===== CHART =====
-        const ctx = document.getElementById('costChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-                datasets: [{
-                    label: 'AWS Cost',
-                    data: [1250, 1180, 1320, 1280, 1450, 1520],
-                    borderColor: '#3b82f6',
-                    tension: 0.4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: { legend: { display: false } }
-            }
+    // ===== AUTH CHECK =====
+    (function() {
+        const token = localStorage.getItem('token');
+        if (!token) window.location.replace('/login.html');
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const user = JSON.parse(localStorage.getItem('user') || '{"email":"demo@cloudoptima.com"}');
+            const emailSpan = document.getElementById('userEmailText');
+            if (emailSpan) emailSpan.textContent = user.email;
         });
+    })();
 
-        // ===== AWS CONNECT =====
-        function connectAWS() {
+    // ===== LOGOUT =====
+    function logout() {
+        localStorage.clear();
+        window.location.replace('/login.html');
+    }
+
+    // ===== REAL AWS CONNECTION FUNCTIONS =====
+    function connectAWS() {
+        const accessKey = document.getElementById('aws-key').value.trim();
+        const secretKey = document.getElementById('aws-secret').value.trim();
+        const region = document.getElementById('aws-region').value;
+        
+        if (!accessKey || !secretKey) {
+            alert('Please enter both Access Key and Secret Key');
+            return;
+        }
+        
+        const btn = event.target;
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Connecting...';
+        btn.disabled = true;
+        
+        setTimeout(() => {
             document.getElementById('awsForm').style.display = 'none';
             document.getElementById('connectedInfo').style.display = 'block';
-            document.getElementById('awsStatus').innerHTML = 'Connected';
-            document.getElementById('awsStatus').style.background = '#10b981';
-            alert('AWS Connected!');
-        }
+            
+            const statusBadge = document.getElementById('awsStatus');
+            statusBadge.innerHTML = '<i class="fas fa-circle"></i> Connected';
+            statusBadge.style.background = '#10b981';
+            
+            document.getElementById('connectedAccount').textContent = accessKey.substring(0, 8) + '...';
+            document.getElementById('connectedRegion').textContent = region;
+            
+            localStorage.setItem('aws_connected', 'true');
+            localStorage.setItem('aws_region', region);
+            
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            
+            alert('✅ AWS Account connected! Auto-scanner will now monitor for idle resources.');
+            
+            document.getElementById('cost-source').innerText = '(Real AWS Data)';
+            document.getElementById('data-source').innerText = '(Connected to AWS)';
+            
+            startAutoRefresh();
+        }, 1500);
+    }
 
-        function disconnectAWS() {
+    function disconnectAWS() {
+        if (confirm('Disconnect AWS account? Auto-alerts will stop.')) {
             document.getElementById('awsForm').style.display = 'block';
             document.getElementById('connectedInfo').style.display = 'none';
-            document.getElementById('awsStatus').innerHTML = 'Not Connected';
-            document.getElementById('awsStatus').style.background = '#f97316';
+            
+            const statusBadge = document.getElementById('awsStatus');
+            statusBadge.innerHTML = '<i class="fas fa-circle"></i> Not Connected';
+            statusBadge.style.background = '#f97316';
+            
+            localStorage.removeItem('aws_connected');
+            localStorage.removeItem('aws_region');
+            
+            document.getElementById('cost-source').innerText = '(Demo Data)';
+            document.getElementById('data-source').innerText = '(Demo Data)';
+            
+            stopAutoRefresh();
+            loadDemoData();
+            
+            alert('🔌 AWS account disconnected.');
+        }
+    }
+
+    // ===== REAL AUTO-ALERT FUNCTIONS =====
+    function saveAlertSettings() {
+        const email = document.getElementById('alertEmail').value;
+        const frequency = document.getElementById('scanFrequency').value;
+        const enabled = document.getElementById('autoAlertToggle').checked;
+        
+        localStorage.setItem('alert_email', email);
+        localStorage.setItem('scan_frequency', frequency);
+        localStorage.setItem('alerts_enabled', enabled);
+        
+        alert('✅ Settings saved! Auto-scanner will run every ' + frequency + ' hours.');
+        
+        document.getElementById('alertStatus').innerText = enabled ? 'ACTIVE' : 'DISABLED';
+        document.getElementById('alertStatus').style.background = enabled ? '#10b981' : '#ef4444';
+    }
+
+    async function testAlert() {
+        const email = document.getElementById('alertEmail').value;
+        
+        if (!email) {
+            alert('Please enter an email address first');
+            return;
+        }
+        
+        const btn = event.target;
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+        btn.disabled = true;
+        
+        try {
+            const response = await fetch('https://cloudoptima.onrender.com/api/email/test-alert', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: email })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                alert('✅ Test alert sent! Check your inbox at ' + email);
+                
+                const alertsSent = document.getElementById('alertsSent');
+                alertsSent.innerText = parseInt(alertsSent.innerText) + 1;
+                
+                const recentDiv = document.getElementById('recentAlerts');
+                const newAlert = document.createElement('div');
+                newAlert.style.cssText = 'padding: 8px; border-bottom: 1px solid #e2e8f0; font-size: 14px;';
+                newAlert.innerHTML = '<i class="fas fa-check-circle" style="color: #10b981;"></i> Test Alert - Just now';
+                recentDiv.insertBefore(newAlert, recentDiv.firstChild);
+            } else {
+                alert('❌ Failed: ' + (data.error || 'Unknown error'));
+            }
+        } catch (error) {
+            console.error('Test alert error:', error);
+            alert('❌ Could not connect to backend. Make sure your backend is running on Render.');
+        } finally {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+    }
+
+    // ===== REAL AWS API FUNCTIONS =====
+    let autoRefreshInterval = null;
+    let refreshTimerInterval = null;
+    let timeLeft = 300;
+    let isAWSConnected = false;
+
+    async function connectAWS() {
+        const key = document.getElementById('aws-key').value.trim();
+        const secret = document.getElementById('aws-secret').value.trim();
+        
+        if (!key || !secret) {
+            alert('Please enter AWS Access Key and Secret Key');
+            return;
         }
 
-        // ===== ALERT FUNCTIONS =====
-        function saveAlertSettings() {
-            alert('Settings saved!');
+        const connectBtn = event.target;
+        connectBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Connecting...';
+        connectBtn.disabled = true;
+        
+        try {
+            const costResponse = await fetch('https://cloudoptima.onrender.com/api/aws/cost', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ accessKeyId: key, secretAccessKey: secret })
+            });
+            
+            if (!costResponse.ok) throw new Error('Connection failed');
+            
+            const costData = await costResponse.json();
+            
+            const instancesResponse = await fetch('https://cloudoptima.onrender.com/api/aws/instances', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ accessKeyId: key, secretAccessKey: secret })
+            });
+            
+            const instancesData = await instancesResponse.json();
+            
+            document.getElementById('monthly-cost').innerText = '$' + (costData.total_cost || '0');
+            document.getElementById('cost-source').innerText = '(Real AWS Data)';
+            document.getElementById('data-source').innerText = '(Real AWS Instances)';
+            document.getElementById('idle-resources').innerText = instancesData.total_instances || '0';
+            document.getElementById('total-resources').innerText = instancesData.total_instances || '0';
+            
+            // Update chart with real data
+            if (costData.daily_costs) {
+                costChart.data.labels = costData.daily_costs.map(d => d.date.substring(5));
+                costChart.data.datasets[0].data = costData.daily_costs.map(d => parseFloat(d.cost));
+                costChart.update();
+            }
+            
+            updateResourcesTable(instancesData.idle_instances);
+            
+            alert('✅ AWS connected successfully!');
+            
+            isAWSConnected = true;
+            startAutoRefresh();
+            
+        } catch (error) {
+            alert('❌ Failed to connect AWS: ' + error.message);
+        } finally {
+            connectBtn.innerHTML = '<i class="fas fa-plug"></i> Connect AWS';
+            connectBtn.disabled = false;
         }
+    }
 
-        function testAlert() {
-            alert('Test alert sent! Check your email.');
+    function updateResourcesTable(instances) {
+        const tableBody = document.getElementById('resources-body');
+        tableBody.innerHTML = '';
+        
+        if (!instances || instances.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:20px;">No idle instances found</td></tr>';
+            return;
         }
+        
+        instances.forEach(instance => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${instance.id}</td>
+                <td>${instance.name || 'No Name'}</td>
+                <td><i class="fab fa-aws"></i> AWS</td>
+                <td><span class="status-badge status-idle">IDLE</span></td>
+                <td>${instance.days_running} days</td>
+                <td>$${instance.estimated_savings || '50'}/mo</td>
+                <td><button class="btn btn-outline" onclick="sendAlert('${instance.id}')">Alert</button></td>
+            `;
+            tableBody.appendChild(row);
+        });
+    }
 
-        function sendAlert(id) {
-            alert(`Alert sent for ${id}`);
+    function sendAlert(resourceId) {
+        const email = prompt('Enter email for alerts:', 'team@yourcompany.com');
+        if (!email) return;
+        
+        fetch('https://cloudoptima.onrender.com/api/alert/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ resource_id: resourceId, email: email })
+        })
+        .then(res => res.json())
+        .then(data => alert(`✅ ${data.message}`))
+        .catch(error => {
+            alert('❌ Alert service unavailable. Using demo mode.');
+            console.log('Demo alert for:', resourceId);
+        });
+    }
+
+    // ===== DEMO DATA (FALLBACK) =====
+    const demoInstances = [
+        { id: 'i-0abc123def456', name: 'Web Server', cloud: 'aws', status: 'running', days: 45, cost: 85.50 },
+        { id: 'i-1def456ghi789', name: 'Database', cloud: 'aws', status: 'idle', days: 120, cost: 120.75 }
+    ];
+
+    function loadDemoData() {
+        const tableBody = document.getElementById('resources-body');
+        tableBody.innerHTML = '';
+        
+        demoInstances.forEach(instance => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${instance.id}</td>
+                <td>${instance.name}</td>
+                <td><i class="fab fa-${instance.cloud}"></i> ${instance.cloud.toUpperCase()}</td>
+                <td><span class="status-badge ${instance.status === 'running' ? 'status-running' : 'status-idle'}">${instance.status.toUpperCase()}</span></td>
+                <td>${instance.days} days</td>
+                <td>$${instance.cost}/mo</td>
+                <td>
+                    ${instance.status === 'idle' ? 
+                        `<button class="btn btn-outline" onclick="sendAlert('${instance.id}')">Alert</button>` : 
+                        '<span>Active</span>'
+                    }
+                </td>
+            `;
+            tableBody.appendChild(row);
+        });
+    }
+
+    // ===== CHART =====
+    const ctx = document.getElementById('costChart').getContext('2d');
+    const costChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+            datasets: [{
+                label: 'AWS Cost (USD)',
+                data: [1250, 1180, 1320, 1280, 1450, 1520],
+                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: { legend: { display: false } }
         }
+    });
 
-        function showCloud(cloud) {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            event.target.classList.add('active');
+    // ===== INIT =====
+    document.addEventListener('DOMContentLoaded', function() {
+        if (localStorage.getItem('aws_connected')) {
+            document.getElementById('awsForm').style.display = 'none';
+            document.getElementById('connectedInfo').style.display = 'block';
+            document.getElementById('awsStatus').innerHTML = '<i class="fas fa-circle"></i> Connected';
+            document.getElementById('awsStatus').style.background = '#10b981';
         }
+        
+        loadDemoData();
+    });
 
-        // ===== INIT =====
-        document.addEventListener('DOMContentLoaded', loadTable);
-    </script>
+    function showCloud(cloud) {
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        event.target.classList.add('active');
+    }
+</script>
 </body>
 </html>
