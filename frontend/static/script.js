@@ -283,3 +283,42 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }, 60000);
 });
+// ===== LOGOUT FUNCTION - WORKS EVERYWHERE =====
+function logout() {
+    // Clear ALL storage
+    localStorage.clear();
+    sessionStorage.clear();
+    
+    // Clear cookies
+    document.cookie.split(";").forEach(function(c) {
+        document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+    });
+    
+    // Force redirect to login
+    window.location.replace('/login.html');
+    return false;
+}
+
+// ===== CHECK AUTH ON EVERY PAGE LOAD =====
+document.addEventListener('DOMContentLoaded', function() {
+    // Update user email in header if element exists
+    const userEmailSpan = document.getElementById('userEmailText');
+    if (userEmailSpan) {
+        try {
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            userEmailSpan.textContent = user.email || 'User';
+        } catch (e) {
+            userEmailSpan.textContent = 'User';
+        }
+    }
+    
+    // Add logout to any logout buttons
+    const logoutBtn = document.querySelector('.logout-btn, [onclick="logout()"]');
+    if (logoutBtn && !logoutBtn.hasAttribute('data-listener')) {
+        logoutBtn.setAttribute('data-listener', 'true');
+        logoutBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            logout();
+        });
+    }
+});

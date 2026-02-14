@@ -5,174 +5,72 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CloudOptima - Sign Up</title>
     <link rel="stylesheet" href="/static/style.css">
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Inter', sans-serif;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
         body {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
+            min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px;
         }
-
         .signup-container {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            width: 450px;
-            padding: 40px;
+            background: white; border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            width: 450px; padding: 40px;
         }
-
-        .logo {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
+        .logo { text-align: center; margin-bottom: 30px; }
         .logo i {
-            font-size: 48px;
-            color: #4f46e5;
-            background: #eef2ff;
-            padding: 15px;
-            border-radius: 16px;
+            font-size: 48px; color: #4f46e5; background: #eef2ff;
+            padding: 15px; border-radius: 16px;
         }
-
-        .logo h2 {
-            margin-top: 15px;
-            color: #1e293b;
-            font-weight: 700;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
+        .logo h2 { margin-top: 15px; color: #1e293b; font-weight: 700; }
+        .form-group { margin-bottom: 20px; }
         .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: #475569;
-            font-weight: 500;
-            font-size: 14px;
+            display: block; margin-bottom: 8px; color: #475569;
+            font-weight: 500; font-size: 14px;
         }
-
         .input-group {
-            position: relative;
-            display: flex;
-            align-items: center;
+            position: relative; display: flex; align-items: center;
         }
-
         .input-group i {
-            position: absolute;
-            left: 15px;
-            color: #94a3b8;
+            position: absolute; left: 15px; color: #94a3b8;
         }
-
         .input-group input {
-            width: 100%;
-            padding: 12px 15px 12px 45px;
-            border: 2px solid #e2e8f0;
-            border-radius: 12px;
-            font-size: 15px;
-            transition: all 0.3s;
+            width: 100%; padding: 12px 15px 12px 45px;
+            border: 2px solid #e2e8f0; border-radius: 12px;
+            font-size: 15px; transition: all 0.3s;
         }
-
         .input-group input:focus {
-            border-color: #4f46e5;
-            outline: none;
+            border-color: #4f46e5; outline: none;
             box-shadow: 0 0 0 3px rgba(79,70,229,0.1);
         }
-
         .btn {
-            width: 100%;
-            padding: 14px;
-            background: #4f46e5;
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
+            width: 100%; padding: 14px; background: #4f46e5; color: white;
+            border: none; border-radius: 12px; font-size: 16px; font-weight: 600;
+            cursor: pointer; transition: all 0.3s;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
         }
-
         .btn:hover {
-            background: #4338ca;
-            transform: translateY(-2px);
+            background: #4338ca; transform: translateY(-2px);
             box-shadow: 0 10px 20px rgba(79,70,229,0.2);
         }
-
-        .links {
-            margin-top: 25px;
-            text-align: center;
-        }
-
-        .links a {
-            color: #4f46e5;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-        .links a:hover {
-            text-decoration: underline;
-        }
-
+        .links { margin-top: 25px; text-align: center; }
+        .links a { color: #4f46e5; text-decoration: none; font-size: 14px; font-weight: 500; }
         .alert {
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            display: none;
+            padding: 12px; border-radius: 8px; margin-bottom: 20px; display: none;
         }
-
         .alert-error {
-            background: #fef2f2;
-            color: #991b1b;
-            border: 1px solid #fee2e2;
-            display: block;
+            background: #fef2f2; color: #991b1b; border: 1px solid #fee2e2; display: block;
         }
-
         .alert-success {
-            background: #f0fdf4;
-            color: #166534;
-            border: 1px solid #dcfce7;
-            display: block;
+            background: #f0fdf4; color: #166534; border: 1px solid #dcfce7; display: block;
         }
-
         .password-strength {
-            margin-top: 8px;
-            height: 4px;
-            background: #e2e8f0;
-            border-radius: 2px;
-            overflow: hidden;
+            margin-top: 8px; height: 4px; background: #e2e8f0; border-radius: 2px; overflow: hidden;
         }
-
-        .strength-bar {
-            height: 100%;
-            width: 0%;
-            transition: all 0.3s;
-        }
-
+        .strength-bar { height: 100%; width: 0%; transition: all 0.3s; }
         .terms {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin: 20px 0;
-            font-size: 14px;
-            color: #64748b;
+            display: flex; align-items: center; gap: 10px; margin: 20px 0;
+            font-size: 14px; color: #64748b;
         }
     </style>
 </head>
@@ -181,14 +79,14 @@
         <div class="logo">
             <i class="fas fa-cloud"></i>
             <h2>CloudOptima</h2>
-            <p style="color: #64748b; margin-top: 5px; font-size: 14px;">Create your free account</p>
+            <p style="color: #64748b; margin-top: 5px;">Create your free account</p>
         </div>
 
         <div id="alertMessage" class="alert"></div>
 
         <form id="signupForm">
             <div class="form-group">
-                <label><i class="fas fa-user"></i> Full Name</label>
+                <label>Full Name</label>
                 <div class="input-group">
                     <i class="fas fa-user"></i>
                     <input type="text" id="fullName" placeholder="Enter your full name" required>
@@ -196,7 +94,7 @@
             </div>
 
             <div class="form-group">
-                <label><i class="fas fa-envelope"></i> Email Address</label>
+                <label>Email Address</label>
                 <div class="input-group">
                     <i class="fas fa-envelope"></i>
                     <input type="email" id="email" placeholder="Enter your email" required>
@@ -204,7 +102,7 @@
             </div>
 
             <div class="form-group">
-                <label><i class="fas fa-lock"></i> Password</label>
+                <label>Password</label>
                 <div class="input-group">
                     <i class="fas fa-lock"></i>
                     <input type="password" id="password" placeholder="Create a password" required onkeyup="checkPasswordStrength()">
@@ -212,11 +110,11 @@
                 <div class="password-strength">
                     <div id="strengthBar" class="strength-bar"></div>
                 </div>
-                <p id="strengthText" style="font-size: 12px; margin-top: 5px; color: #64748b;">Enter a password</p>
+                <p id="strengthText" style="font-size: 12px; margin-top: 5px;">Enter a password</p>
             </div>
 
             <div class="form-group">
-                <label><i class="fas fa-lock"></i> Confirm Password</label>
+                <label>Confirm Password</label>
                 <div class="input-group">
                     <i class="fas fa-lock"></i>
                     <input type="password" id="confirmPassword" placeholder="Confirm your password" required>
@@ -225,12 +123,11 @@
 
             <div class="terms">
                 <input type="checkbox" id="terms" required>
-                <label for="terms">I agree to the <a href="#" style="color: #4f46e5;">Terms of Service</a> and <a href="#" style="color: #4f46e5;">Privacy Policy</a></label>
+                <label for="terms">I agree to the Terms of Service and Privacy Policy</label>
             </div>
 
             <button type="submit" class="btn">
-                <i class="fas fa-user-plus"></i>
-                Create Account
+                <i class="fas fa-user-plus"></i> Create Account
             </button>
         </form>
 
@@ -240,14 +137,12 @@
     </div>
 
     <script>
-        // Password strength checker
         function checkPasswordStrength() {
             const password = document.getElementById('password').value;
             const strengthBar = document.getElementById('strengthBar');
             const strengthText = document.getElementById('strengthText');
             
             let strength = 0;
-            
             if (password.length >= 8) strength += 25;
             if (password.match(/[a-z]+/)) strength += 25;
             if (password.match(/[A-Z]+/)) strength += 25;
@@ -274,82 +169,58 @@
             }
         }
 
-        // Signup form submission - REAL AUTH
         document.getElementById('signupForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const name = document.getElementById('fullName').value;
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
+            const confirm = document.getElementById('confirmPassword').value;
             const terms = document.getElementById('terms').checked;
             const alertDiv = document.getElementById('alertMessage');
 
-            // Validation
             if (!terms) {
                 alertDiv.className = 'alert alert-error';
-                alertDiv.innerHTML = '<i class="fas fa-exclamation-circle"></i> Please accept Terms of Service';
+                alertDiv.innerHTML = 'Please accept Terms of Service';
                 return;
             }
 
-            if (password !== confirmPassword) {
+            if (password !== confirm) {
                 alertDiv.className = 'alert alert-error';
-                alertDiv.innerHTML = '<i class="fas fa-exclamation-circle"></i> Passwords do not match';
+                alertDiv.innerHTML = 'Passwords do not match';
                 return;
             }
 
-            if (password.length < 6) {
-                alertDiv.className = 'alert alert-error';
-                alertDiv.innerHTML = '<i class="fas fa-exclamation-circle"></i> Password must be at least 6 characters';
-                return;
-            }
-
-            // Show loading
             const btn = document.querySelector('.btn');
             const originalText = btn.innerHTML;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating account...';
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
             btn.disabled = true;
 
             try {
-                // Call backend register API
                 const response = await fetch('https://cloudoptima.onrender.com/api/auth/register', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ name, email, password })
                 });
 
-                const data = await response.json();
-
                 if (response.ok) {
                     alertDiv.className = 'alert alert-success';
-                    alertDiv.innerHTML = '<i class="fas fa-check-circle"></i> Account created! Redirecting to login...';
-                    
-                    setTimeout(() => {
-                        window.location.href = '/login.html';
-                    }, 2000);
+                    alertDiv.innerHTML = 'Account created! Redirecting...';
+                    setTimeout(() => window.location.href = '/login.html', 2000);
                 } else {
+                    const data = await response.json();
                     alertDiv.className = 'alert alert-error';
-                    alertDiv.innerHTML = '<i class="fas fa-exclamation-circle"></i> ' + (data.message || 'Registration failed');
-                    
+                    alertDiv.innerHTML = data.message || 'Registration failed';
                     btn.innerHTML = originalText;
                     btn.disabled = false;
                 }
             } catch (error) {
-                console.error('Signup error:', error);
                 alertDiv.className = 'alert alert-error';
-                alertDiv.innerHTML = '<i class="fas fa-exclamation-circle"></i> Connection error. Please try again.';
-                
+                alertDiv.innerHTML = 'Connection error';
                 btn.innerHTML = originalText;
                 btn.disabled = false;
             }
         });
-
-        // Redirect if already logged in
-        if (localStorage.getItem('token')) {
-            window.location.href = '/';
-        }
     </script>
 </body>
 </html>
