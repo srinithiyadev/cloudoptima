@@ -2,518 +2,422 @@
 <html lang="en">
 <head>
     <script>
-    // FORCE LOGIN CHECK - STRICT VERSION
-    (function() {
-        const isLoggedIn = localStorage.getItem('demo_mode') === 'true' || localStorage.getItem('token');
-        if (!isLoggedIn) window.location.replace('/login.html');
-        
-        document.addEventListener('DOMContentLoaded', function() {
-            const user = JSON.parse(localStorage.getItem('user') || '{"email":"demo@cloudoptima.com"}');
-            const emailSpan = document.getElementById('userEmailText');
-            if (emailSpan) emailSpan.textContent = user.email;
-        });
-    })();
-    
+    // PROTECT DASHBOARD - CHECK LOGIN
+    if (!localStorage.getItem('demo_mode') && !localStorage.getItem('token')) {
+        window.location.href = '/login.html';
+    }
     // AWS Connection Functions
-    function connectAWS() {
-        const accessKey = document.getElementById('aws-key').value.trim();
-        const secretKey = document.getElementById('aws-secret').value.trim();
-        const region = document.getElementById('aws-region').value;
-        
-        if (!accessKey || !secretKey) {
-            alert('Please enter both Access Key and Secret Key');
-            return;
-        }
-        
-        const btn = event.target;
-        const originalText = btn.innerHTML;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Connecting...';
-        btn.disabled = true;
-        
-        setTimeout(() => {
-            document.getElementById('awsForm').style.display = 'none';
-            document.getElementById('connectedInfo').style.display = 'block';
-            
-            const statusBadge = document.getElementById('awsStatus');
-            statusBadge.innerHTML = '<i class="fas fa-circle"></i> Connected';
-            statusBadge.style.background = '#10b981';
-            
-            document.getElementById('connectedAccount').textContent = accessKey.substring(0, 8) + '...';
-            document.getElementById('connectedRegion').textContent = region;
-            
-            localStorage.setItem('aws_connected', 'true');
-            localStorage.setItem('aws_region', region);
-            
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-            
-            alert('✅ AWS Account connected! Auto-scanner will now monitor for idle resources.');
-            
-            document.getElementById('cost-source').innerText = '(Real AWS Data)';
-            document.getElementById('data-source').innerText = '(Connected to AWS)';
-            
-            startAutoRefresh();
-        }, 1500);
+function connectAWS() {
+    const accessKey = document.getElementById('aws-key').value.trim();
+    const secretKey = document.getElementById('aws-secret').value.trim();
+    const region = document.getElementById('aws-region').value;
+    
+    if (!accessKey || !secretKey) {
+        alert('Please enter both Access Key and Secret Key');
+        return;
     }
+    
+    // Show loading
+    const btn = event.target;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Connecting...';
+    btn.disabled = true;
+    
+    // Simulate connection (since backend not ready)
+    setTimeout(() => {
+        // Hide form, show connected info
+        document.getElementById('awsForm').style.display = 'none';
+        document.getElementById('connectedInfo').style.display = 'block';
+        
+        // Update status badge
+        const statusBadge = document.getElementById('awsStatus');
+        statusBadge.innerHTML = '<i class="fas fa-circle"></i> Connected';
+        statusBadge.style.background = '#10b981';
+        
+        // Show account info
+        document.getElementById('connectedAccount').textContent = accessKey.substring(0, 8) + '...';
+        document.getElementById('connectedRegion').textContent = region;
+        
+        // Save to localStorage
+        localStorage.setItem('aws_connected', 'true');
+        localStorage.setItem('aws_region', region);
+        
+        // Restore button
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        
+        // Show success message
+        alert('✅ AWS Account connected! Auto-scanner will now monitor for idle resources.');
+        
+        // Update the data source indicator
+        document.getElementById('cost-source').innerText = '(Real AWS Data)';
+        document.getElementById('data-source').innerText = '(Connected to AWS)';
+        
+        // Start auto-refresh
+        startAutoRefresh();
+    }, 1500);
+}
 
-    function disconnectAWS() {
-        if (confirm('Disconnect AWS account? Auto-alerts will stop.')) {
-            document.getElementById('awsForm').style.display = 'block';
-            document.getElementById('connectedInfo').style.display = 'none';
-            
-            const statusBadge = document.getElementById('awsStatus');
-            statusBadge.innerHTML = '<i class="fas fa-circle"></i> Not Connected';
-            statusBadge.style.background = '#f97316';
-            
-            localStorage.removeItem('aws_connected');
-            localStorage.removeItem('aws_region');
-            
-            document.getElementById('cost-source').innerText = '(Demo Data)';
-            document.getElementById('data-source').innerText = '(Demo Data)';
-            
-            stopAutoRefresh();
-            loadDemoData();
-            
-            alert('🔌 AWS account disconnected.');
-        }
+function disconnectAWS() {
+    if (confirm('Disconnect AWS account? Auto-alerts will stop.')) {
+        // Show form, hide connected info
+        document.getElementById('awsForm').style.display = 'block';
+        document.getElementById('connectedInfo').style.display = 'none';
+        
+        // Update status badge
+        const statusBadge = document.getElementById('awsStatus');
+        statusBadge.innerHTML = '<i class="fas fa-circle"></i> Not Connected';
+        statusBadge.style.background = '#f97316';
+        
+        // Clear localStorage
+        localStorage.removeItem('aws_connected');
+        localStorage.removeItem('aws_region');
+        
+        // Update data source indicator
+        document.getElementById('cost-source').innerText = '(Demo Data)';
+        document.getElementById('data-source').innerText = '(Demo Data)';
+        
+        // Stop auto-refresh
+        stopAutoRefresh();
+        
+        // Reload demo data
+        loadDemoData();
+        
+        alert('🔌 AWS account disconnected.');
     }
+}
 
-    // Auto-Alert Functions
-    function saveAlertSettings() {
-        const email = document.getElementById('alertEmail').value;
-        const frequency = document.getElementById('scanFrequency').value;
-        const enabled = document.getElementById('autoAlertToggle').checked;
+// Check if AWS was previously connected
+document.addEventListener('DOMContentLoaded', function() {
+    if (localStorage.getItem('aws_connected')) {
+        document.getElementById('awsForm').style.display = 'none';
+        document.getElementById('connectedInfo').style.display = 'block';
         
-        localStorage.setItem('alert_email', email);
-        localStorage.setItem('scan_frequency', frequency);
-        localStorage.setItem('alerts_enabled', enabled);
+        const statusBadge = document.getElementById('awsStatus');
+        statusBadge.innerHTML = '<i class="fas fa-circle"></i> Connected';
+        statusBadge.style.background = '#10b981';
         
-        alert('✅ Settings saved! Auto-scanner will run every ' + frequency + ' hours.');
-        
-        document.getElementById('alertStatus').innerText = enabled ? 'ACTIVE' : 'DISABLED';
-        document.getElementById('alertStatus').style.background = enabled ? '#10b981' : '#ef4444';
+        document.getElementById('connectedRegion').textContent = localStorage.getItem('aws_region') || 'us-east-1';
+        document.getElementById('connectedAccount').textContent = 'Previously Connected';
     }
+});
+// Auto-Alert Functions
+function saveAlertSettings() {
+    const email = document.getElementById('alertEmail').value;
+    const frequency = document.getElementById('scanFrequency').value;
+    const enabled = document.getElementById('autoAlertToggle').checked;
+    
+    // Save to localStorage
+    localStorage.setItem('alert_email', email);
+    localStorage.setItem('scan_frequency', frequency);
+    localStorage.setItem('alerts_enabled', enabled);
+    
+    alert('✅ Settings saved! Auto-scanner will run every ' + frequency + ' hours.');
+    
+    // Update status
+    document.getElementById('alertStatus').innerText = enabled ? 'ACTIVE' : 'DISABLED';
+    document.getElementById('alertStatus').style.background = enabled ? '#10b981' : '#ef4444';
+}
 
-    async function testAlert() {
-        const email = document.getElementById('alertEmail').value;
-        
-        if (!email) {
-            alert('Please enter an email address first');
-            return;
-        }
-        
-        const btn = event.target;
-        const originalText = btn.innerHTML;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
-        btn.disabled = true;
-        
-        try {
-            const response = await fetch('https://cloudoptima.onrender.com/api/email/test-alert', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: email })
-            });
-            
-            const data = await response.json();
-            
-            if (response.ok) {
-                alert('✅ Test alert sent! Check your inbox at ' + email);
-                
-                const alertsSent = document.getElementById('alertsSent');
-                alertsSent.innerText = parseInt(alertsSent.innerText) + 1;
-                
-                const recentDiv = document.getElementById('recentAlerts');
-                const newAlert = document.createElement('div');
-                newAlert.style.cssText = 'padding: 8px; border-bottom: 1px solid #e2e8f0; font-size: 14px;';
-                newAlert.innerHTML = '<i class="fas fa-check-circle" style="color: #10b981;"></i> Test Alert - Just now';
-                recentDiv.insertBefore(newAlert, recentDiv.firstChild);
-            } else {
-                alert('❌ Failed: ' + (data.error || 'Unknown error'));
-            }
-        } catch (error) {
-            console.error('Test alert error:', error);
-            alert('❌ Could not connect to backend. Make sure your backend is running on Render.');
-        } finally {
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-        }
+function testAlert() {
+    const email = document.getElementById('alertEmail').value;
+    
+    if (!email) {
+        alert('Please enter an email address first');
+        return;
     }
+    
+    // Show sending
+    const btn = event.target;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+    btn.disabled = true;
+    
+    // Simulate sending
+    setTimeout(() => {
+        alert('✅ Test alert sent to ' + email + '! Check your inbox.');
+        
+        // Update alerts sent count
+        const alertsSent = document.getElementById('alertsSent');
+        alertsSent.innerText = parseInt(alertsSent.innerText) + 1;
+        
+        // Add to recent alerts
+        const recentDiv = document.getElementById('recentAlerts');
+        const newAlert = document.createElement('div');
+        newAlert.style.cssText = 'padding: 8px; border-bottom: 1px solid #e2e8f0; font-size: 14px;';
+        newAlert.innerHTML = '<i class="fas fa-check-circle" style="color: #10b981;"></i> Test Alert - Just now';
+        recentDiv.insertBefore(newAlert, recentDiv.firstChild);
+        
+        btn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Test Alert';
+        btn.disabled = false;
+    }, 1500);
+}
 
-    // Load saved settings on page load
-    document.addEventListener('DOMContentLoaded', function() {
-        if (localStorage.getItem('aws_connected')) {
-            document.getElementById('awsForm').style.display = 'none';
-            document.getElementById('connectedInfo').style.display = 'block';
-            
-            const statusBadge = document.getElementById('awsStatus');
-            statusBadge.innerHTML = '<i class="fas fa-circle"></i> Connected';
-            statusBadge.style.background = '#10b981';
-            
-            document.getElementById('connectedRegion').textContent = localStorage.getItem('aws_region') || 'us-east-1';
-            document.getElementById('connectedAccount').textContent = 'Previously Connected';
-        }
-        
-        const savedEmail = localStorage.getItem('alert_email');
-        const savedFrequency = localStorage.getItem('scan_frequency');
-        const alertsEnabled = localStorage.getItem('alerts_enabled');
-        
-        if (savedEmail) document.getElementById('alertEmail').value = savedEmail;
-        if (savedFrequency) document.getElementById('scanFrequency').value = savedFrequency;
-        if (alertsEnabled !== null) {
-            document.getElementById('autoAlertToggle').checked = alertsEnabled === 'true';
-            document.getElementById('alertStatus').innerText = alertsEnabled === 'true' ? 'ACTIVE' : 'DISABLED';
-            document.getElementById('alertStatus').style.background = alertsEnabled === 'true' ? '#10b981' : '#ef4444';
-        }
-        
-        document.getElementById('lastScanTime').innerText = new Date().toLocaleTimeString();
-    });
-    </script>
+// Load saved settings on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Load alert settings
+    const savedEmail = localStorage.getItem('alert_email');
+    const savedFrequency = localStorage.getItem('scan_frequency');
+    const alertsEnabled = localStorage.getItem('alerts_enabled');
+    
+    if (savedEmail) {
+        document.getElementById('alertEmail').value = savedEmail;
+    }
+    
+    if (savedFrequency) {
+        document.getElementById('scanFrequency').value = savedFrequency;
+    }
+    
+    if (alertsEnabled !== null) {
+        document.getElementById('autoAlertToggle').checked = alertsEnabled === 'true';
+        document.getElementById('alertStatus').innerText = alertsEnabled === 'true' ? 'ACTIVE' : 'DISABLED';
+        document.getElementById('alertStatus').style.background = alertsEnabled === 'true' ? '#10b981' : '#ef4444';
+    }
+    
+    // Update last scan time
+    document.getElementById('lastScanTime').innerText = new Date().toLocaleTimeString();
+});
+</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CloudOptima Dashboard</title>
     <link rel="stylesheet" href="/static/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        /* Modern SaaS Dashboard Styling */
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: #f3f4f6; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
-        
-        .dashboard-container { max-width: 1440px; margin: 0 auto; padding: 20px; }
-        
-        /* Top Navigation */
-        .top-nav {
-            background: white; border-radius: 16px; padding: 16px 24px;
-            display: flex; justify-content: space-between; align-items: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.02); margin-bottom: 24px;
-        }
-        
-        .nav-left { display: flex; align-items: center; gap: 12px; }
-        .nav-left h1 { font-size: 1.5rem; color: #111827; }
-        .nav-left h1 i { color: #3b82f6; margin-right: 8px; }
-        
-        .nav-right { display: flex; align-items: center; gap: 20px; }
-        .user-menu {
-            display: flex; align-items: center; gap: 12px;
-            padding: 8px 16px; background: #f9fafb; border-radius: 40px;
-        }
-        .user-menu i { color: #6b7280; }
-        .logout-btn {
-            padding: 8px 16px; background: #ef4444; color: white;
-            border: none; border-radius: 8px; cursor: pointer; font-size: 14px;
-            transition: all 0.2s;
-        }
-        .logout-btn:hover { background: #dc2626; }
-        
-        /* Stats Grid */
-        .stats-grid {
-            display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;
-            margin-bottom: 24px;
-        }
-        .stat-card {
-            background: white; padding: 24px; border-radius: 16px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.02); border: 1px solid #f0f0f0;
-        }
-        .stat-card h3 { font-size: 14px; color: #6b7280; margin-bottom: 8px; }
-        .stat-number { font-size: 32px; font-weight: 600; color: #111827; }
-        .stat-label { font-size: 12px; color: #10b981; margin-top: 4px; }
-        
-        /* Two Column Layout */
-        .dashboard-grid {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 24px;
-            margin-bottom: 24px;
-        }
-        
-        /* Cards */
-        .card {
-            background: white; border-radius: 16px; padding: 24px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.02); border: 1px solid #f0f0f0;
-        }
-        .card-header {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 20px;
-        }
-        .card-header h2 {
-            font-size: 18px; font-weight: 600; color: #111827;
-            display: flex; align-items: center; gap: 8px;
-        }
-        .status-badge {
-            padding: 4px 12px; border-radius: 20px; font-size: 12px;
-            background: #10b981; color: white;
-        }
-        
-        /* Form Elements */
-        .form-group { margin-bottom: 16px; }
-        .form-group label {
-            display: block; font-size: 14px; font-weight: 500;
-            color: #374151; margin-bottom: 6px;
-        }
-        .form-control {
-            width: 100%; padding: 10px 12px; border: 2px solid #e5e7eb;
-            border-radius: 8px; font-size: 14px; transition: all 0.2s;
-        }
-        .form-control:focus {
-            border-color: #3b82f6; outline: none; box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
-        }
-        
-        .btn {
-            padding: 10px 20px; border: none; border-radius: 8px;
-            font-size: 14px; font-weight: 500; cursor: pointer;
-            display: inline-flex; align-items: center; gap: 8px;
-            transition: all 0.2s;
-        }
-        .btn-primary { background: #3b82f6; color: white; }
-        .btn-primary:hover { background: #2563eb; }
-        .btn-success { background: #10b981; color: white; }
-        .btn-success:hover { background: #059669; }
-        .btn-outline { background: white; border: 1px solid #e5e7eb; color: #374151; }
-        .btn-outline:hover { background: #f9fafb; }
-        
-        /* Recent Alerts */
-        .alert-item {
-            padding: 12px; border-bottom: 1px solid #f0f0f0;
-            display: flex; align-items: center; gap: 12px;
-        }
-        .alert-item:last-child { border-bottom: none; }
-        .alert-item i { color: #10b981; }
-        
-        /* Chart Section */
-        .chart-section {
-            background: white; border-radius: 16px; padding: 24px;
-            margin-bottom: 24px; border: 1px solid #f0f0f0;
-        }
-        
-        /* Table */
-        .table-section {
-            background: white; border-radius: 16px; padding: 24px;
-            border: 1px solid #f0f0f0; overflow-x: auto;
-        }
-        table {
-            width: 100%; border-collapse: collapse; margin-top: 16px;
-        }
-        th {
-            text-align: left; padding: 12px; background: #f9fafb;
-            font-size: 12px; font-weight: 600; color: #6b7280;
-        }
-        td { padding: 12px; border-bottom: 1px solid #f0f0f0; }
-        
-        /* Cloud Tabs */
-        .cloud-tabs {
-            display: flex; gap: 8px; margin-bottom: 16px;
-        }
-        .tab-btn {
-            padding: 8px 16px; border: 1px solid #e5e7eb; background: white;
-            border-radius: 8px; cursor: pointer; font-size: 14px;
-        }
-        .tab-btn.active {
-            background: #3b82f6; color: white; border-color: #3b82f6;
-        }
-        
-        /* Responsive */
-        @media (max-width: 1024px) {
-            .stats-grid { grid-template-columns: repeat(2, 1fr); }
-            .dashboard-grid { grid-template-columns: 1fr; }
-        }
-    </style>
 </head>
 <body>
-    <div class="dashboard-container">
-        <!-- Top Navigation -->
-        <div class="top-nav">
-            <div class="nav-left">
-                <h1><i class="fas fa-cloud"></i> CloudOptima</h1>
-            </div>
-            <div class="nav-right">
-                <div class="user-menu">
-                    <i class="fas fa-user-circle"></i>
-                    <span id="userEmailText">demo@cloudoptima.com</span>
-                </div>
-                <button onclick="logout()" class="logout-btn">
-                    <i class="fas fa-sign-out-alt"></i> Logout
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <h1><i class="fas fa-cloud"></i> CloudOptima Dashboard</h1>
+            <div class="header-info">
+                <p><i class="fas fa-clock"></i> Last scan: <span id="last-scan">Just now</span></p>
+                <button onclick="runScan()" class="btn-scan">
+                    <i class="fas fa-sync-alt"></i> Run Scan
+                </button>
+                <button onclick="toggleDemoMode()" class="btn-demo" id="demo-btn">
+                    <i class="fas fa-play-circle"></i> Demo Mode: ON
                 </button>
             </div>
-        </div>
+            <div style="position: absolute; top: 20px; right: 30px; display: flex; align-items: center; gap: 15px;">
+    <span style="color: #1e293b;" id="userEmail">
+        <i class="fas fa-user-circle"></i> 
+        <span id="userEmailText">demo@cloudoptima.com</span>
+    </span>
+    <button onclick="logout()" style="padding: 8px 16px; background: #ef4444; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px;">
+        <i class="fas fa-sign-out-alt"></i> Logout
+    </button>
+</div>
+        </header>
 
-        <!-- Stats Grid -->
-        <div class="stats-grid">
-            <div class="stat-card">
+        <!-- AWS Connection Panel -->
+<div class="aws-connect-card" id="aws-connect">
+    <h3><i class="fab fa-aws"></i> Connect Your AWS Account</h3>
+    <p>Connect to enable auto-alerts for idle resources</p>
+
+    <!-- AUTO-ALERT SETTINGS SECTION - Add this after AWS Connect -->
+<div class="alert-settings-card" style="background: white; border-radius: 12px; padding: 25px; margin: 20px 0; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+    <h3 style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
+        <i class="fas fa-bell" style="color: #4f46e5;"></i>
+        Auto-Alert Settings
+        <span id="alertStatus" style="background: #10b981; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; margin-left: 10px;">ACTIVE</span>
+    </h3>
+    
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px;">
+        <div style="text-align: center; padding: 15px; background: #f8fafc; border-radius: 10px;">
+            <i class="fas fa-clock" style="color: #4f46e5; font-size: 20px;"></i>
+            <p style="font-size: 12px; color: #64748b; margin-top: 5px;">Last Scan</p>
+            <p id="lastScanTime" style="font-weight: 600; color: #1e293b;">Just now</p>
+        </div>
+        <div style="text-align: center; padding: 15px; background: #f8fafc; border-radius: 10px;">
+            <i class="fas fa-server" style="color: #4f46e5; font-size: 20px;"></i>
+            <p style="font-size: 12px; color: #64748b; margin-top: 5px;">Idle Found</p>
+            <p id="idleCount" style="font-weight: 600; color: #1e293b;">3</p>
+        </div>
+        <div style="text-align: center; padding: 15px; background: #f8fafc; border-radius: 10px;">
+            <i class="fas fa-envelope" style="color: #4f46e5; font-size: 20px;"></i>
+            <p style="font-size: 12px; color: #64748b; margin-top: 5px;">Alerts Sent</p>
+            <p id="alertsSent" style="font-weight: 600; color: #1e293b;">5</p>
+        </div>
+    </div>
+    
+    <div style="border-top: 2px solid #e2e8f0; padding-top: 20px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div>
+                <label style="display: block; margin-bottom: 8px; font-weight: 500;">Alert Email</label>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <input type="email" id="alertEmail" value="srinithiyadevops@gmail.com" 
+                           style="flex: 1; padding: 10px; border: 2px solid #e2e8f0; border-radius: 8px;">
+                    <span id="emailVerified" style="color: #10b981;"><i class="fas fa-check-circle"></i></span>
+                </div>
+            </div>
+            <div>
+                <label style="display: block; margin-bottom: 8px; font-weight: 500;">Scan Frequency</label>
+                <select id="scanFrequency" style="width: 100%; padding: 10px; border: 2px solid #e2e8f0; border-radius: 8px;">
+                    <option value="6">Every 6 hours</option>
+                    <option value="12">Every 12 hours</option>
+                    <option value="24">Every 24 hours</option>
+                </select>
+            </div>
+        </div>
+        
+        <div style="margin-top: 20px; display: flex; gap: 15px; align-items: center;">
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                <input type="checkbox" id="autoAlertToggle" checked>
+                <span>Enable Auto-Alerts</span>
+            </label>
+            <button onclick="saveAlertSettings()" style="padding: 10px 20px; background: #4f46e5; color: white; border: none; border-radius: 8px; cursor: pointer;">
+                <i class="fas fa-save"></i> Save Settings
+            </button>
+            <button onclick="testAlert()" style="padding: 10px 20px; background: #10b981; color: white; border: none; border-radius: 8px; cursor: pointer;">
+                <i class="fas fa-paper-plane"></i> Send Test Alert
+            </button>
+        </div>
+        
+        <!-- Recent Alerts -->
+        <div style="margin-top: 20px; background: #f8fafc; padding: 15px; border-radius: 8px;">
+            <p style="font-weight: 600; margin-bottom: 10px;"><i class="fas fa-history"></i> Recent Alerts</p>
+            <div id="recentAlerts">
+                <div style="padding: 8px; border-bottom: 1px solid #e2e8f0; font-size: 14px;">
+                    <i class="fas fa-check-circle" style="color: #10b981;"></i> 
+                    dev-server-1 (EC2) - 2 hours ago
+                </div>
+                <div style="padding: 8px; border-bottom: 1px solid #e2e8f0; font-size: 14px;">
+                    <i class="fas fa-check-circle" style="color: #10b981;"></i> 
+                    old-database (RDS) - 5 hours ago
+                </div>
+                <div style="padding: 8px; font-size: 14px;">
+                    <i class="fas fa-check-circle" style="color: #10b981;"></i> 
+                    unattached-volume (EBS) - 1 day ago
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+    
+    <!-- Connection Status Badge -->
+    <div style="margin-bottom: 15px;">
+        <span id="awsStatus" style="background: #f97316; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px;">
+            <i class="fas fa-circle"></i> Not Connected
+        </span>
+    </div>
+    
+    <!-- Connection Form -->
+    <div id="awsForm">
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: 500;">AWS Access Key ID</label>
+            <input type="text" id="aws-key" placeholder="AKIAXXXXXXXXXXXXXXXX" style="width: 100%; padding: 10px; border: 2px solid #e2e8f0; border-radius: 8px;">
+        </div>
+        
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: 500;">AWS Secret Access Key</label>
+            <input type="password" id="aws-secret" placeholder="wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY" style="width: 100%; padding: 10px; border: 2px solid #e2e8f0; border-radius: 8px;">
+        </div>
+        
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: 500;">Region</label>
+            <select id="aws-region" style="width: 100%; padding: 10px; border: 2px solid #e2e8f0; border-radius: 8px;">
+                <option value="us-east-1">US East (N. Virginia)</option>
+                <option value="us-west-2">US West (Oregon)</option>
+                <option value="eu-west-1">EU (Ireland)</option>
+            </select>
+        </div>
+        
+        <button onclick="connectAWS()" class="btn-connect" style="width: 100%;">
+            <i class="fas fa-plug"></i> Connect AWS Account
+        </button>
+    </div>
+    
+    <!-- Connected Info (Hidden by default) -->
+    <div id="connectedInfo" style="display: none; background: #f0fdf4; padding: 20px; border-radius: 8px; margin-top: 15px;">
+        <p style="color: #166534;"><i class="fas fa-check-circle"></i> AWS Account Connected!</p>
+        <p style="font-size: 14px;">Account: <span id="connectedAccount">********</span></p>
+        <p style="font-size: 14px;">Region: <span id="connectedRegion">us-east-1</span></p>
+        <p style="font-size: 14px; margin-top: 10px;">
+            <i class="fas fa-bell"></i> Auto-alerts: <span style="color: #059669;">Active</span>
+        </p>
+        <button onclick="disconnectAWS()" style="margin-top: 10px; padding: 8px 16px; background: #dc3545; color: white; border: none; border-radius: 6px; cursor: pointer;">
+            <i class="fas fa-unlink"></i> Disconnect
+        </button>
+    </div>
+    
+    <p class="small-note">
+        <i class="fas fa-shield-alt"></i> Your keys are used only for scanning. We recommend using a read-only IAM user.
+    </p>
+    <p id="refresh-status" class="small-note" style="display:none;">
+        <i class="fas fa-sync-alt"></i> Auto-refresh: <span id="refresh-timer">5:00</span>
+    </p>
+</div>
+       
+
+        <!-- Summary Cards -->
+        <div class="summary-cards">
+            <div class="card">
                 <h3><i class="fas fa-server"></i> Total Resources</h3>
-                <div class="stat-number" id="total-resources">12</div>
-                <div class="stat-label">Across all clouds</div>
+                <p class="big-number" id="total-resources">12</p>
             </div>
-            <div class="stat-card">
+            <div class="card">
                 <h3><i class="fas fa-bed"></i> Idle Resources</h3>
-                <div class="stat-number" id="idle-resources">3</div>
-                <div class="stat-label">Needs attention</div>
+                <p class="big-number" id="idle-resources">3</p>
             </div>
-            <div class="stat-card">
+            <div class="card highlight">
                 <h3><i class="fas fa-money-bill-wave"></i> Monthly Cost</h3>
-                <div class="stat-number" id="monthly-cost">$1,250</div>
-                <div class="stat-label" id="cost-source">(Demo Data)</div>
-            </div>
-            <div class="stat-card">
-                <h3><i class="fas fa-bell"></i> Alerts Sent</h3>
-                <div class="stat-number" id="alertsSent">5</div>
-                <div class="stat-label">Last 24 hours</div>
-            </div>
-        </div>
-
-        <!-- Two Column Layout -->
-        <div class="dashboard-grid">
-            <!-- AWS Connect Card -->
-            <div class="card">
-                <div class="card-header">
-                    <h2><i class="fab fa-aws" style="color: #3b82f6;"></i> AWS Connection</h2>
-                    <span id="awsStatus" class="status-badge" style="background: #f97316;">Not Connected</span>
-                </div>
-                
-                <div id="awsForm">
-                    <div class="form-group">
-                        <label>Access Key ID</label>
-                        <input type="text" id="aws-key" class="form-control" placeholder="AKIAXXXXXXXXXXXXXXXX">
-                    </div>
-                    <div class="form-group">
-                        <label>Secret Access Key</label>
-                        <input type="password" id="aws-secret" class="form-control" placeholder="••••••••••••••••">
-                    </div>
-                    <div class="form-group">
-                        <label>Region</label>
-                        <select id="aws-region" class="form-control">
-                            <option value="us-east-1">US East (N. Virginia)</option>
-                            <option value="us-west-2">US West (Oregon)</option>
-                            <option value="eu-west-1">EU (Ireland)</option>
-                        </select>
-                    </div>
-                    <button onclick="connectAWS()" class="btn btn-primary" style="width: 100%;">
-                        <i class="fas fa-plug"></i> Connect AWS Account
-                    </button>
-                </div>
-                
-                <div id="connectedInfo" style="display: none;">
-                    <div style="background: #f0fdf4; padding: 20px; border-radius: 12px;">
-                        <p style="color: #166534;"><i class="fas fa-check-circle"></i> AWS Connected</p>
-                        <p style="font-size: 14px; margin-top: 10px;">Account: <span id="connectedAccount">********</span></p>
-                        <p style="font-size: 14px;">Region: <span id="connectedRegion">us-east-1</span></p>
-                        <button onclick="disconnectAWS()" class="btn btn-outline" style="margin-top: 15px; width: 100%;">
-                            <i class="fas fa-unlink"></i> Disconnect
-                        </button>
-                    </div>
-                </div>
-                
-                <p style="font-size: 12px; color: #6b7280; margin-top: 15px;">
-                    <i class="fas fa-shield-alt"></i> Keys are encrypted and used only for scanning
-                </p>
-            </div>
-
-            <!-- Auto-Alert Settings Card -->
-            <div class="card">
-                <div class="card-header">
-                    <h2><i class="fas fa-bell" style="color: #3b82f6;"></i> Auto-Alert Settings</h2>
-                    <span id="alertStatus" class="status-badge" style="background: #10b981;">ACTIVE</span>
-                </div>
-                
-                <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 20px;">
-                    <div style="text-align: center;">
-                        <i class="fas fa-clock" style="color: #6b7280;"></i>
-                        <p style="font-size: 12px; color: #6b7280;">Last Scan</p>
-                        <p style="font-weight: 600;" id="lastScanTime">Just now</p>
-                    </div>
-                    <div style="text-align: center;">
-                        <i class="fas fa-server" style="color: #6b7280;"></i>
-                        <p style="font-size: 12px; color: #6b7280;">Idle Found</p>
-                        <p style="font-weight: 600;" id="idleCount">3</p>
-                    </div>
-                    <div style="text-align: center;">
-                        <i class="fas fa-envelope" style="color: #6b7280;"></i>
-                        <p style="font-size: 12px; color: #6b7280;">Alerts Sent</p>
-                        <p style="font-weight: 600;" id="alertsCount">5</p>
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label>Alert Email</label>
-                    <input type="email" id="alertEmail" class="form-control" value="srinithiyadevops@gmail.com">
-                </div>
-                
-                <div class="form-group">
-                    <label>Scan Frequency</label>
-                    <select id="scanFrequency" class="form-control">
-                        <option value="6">Every 6 hours</option>
-                        <option value="12">Every 12 hours</option>
-                        <option value="24">Every 24 hours</option>
-                    </select>
-                </div>
-                
-                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
-                    <label style="display: flex; align-items: center; gap: 8px;">
-                        <input type="checkbox" id="autoAlertToggle" checked>
-                        <span>Enable Auto-Alerts</span>
-                    </label>
-                </div>
-                
-                <div style="display: flex; gap: 12px;">
-                    <button onclick="saveAlertSettings()" class="btn btn-primary" style="flex: 1;">
-                        <i class="fas fa-save"></i> Save
-                    </button>
-                    <button onclick="testAlert()" class="btn btn-success" style="flex: 1;">
-                        <i class="fas fa-paper-plane"></i> Test
-                    </button>
-                </div>
-                
-                <!-- Recent Alerts -->
-                <div style="margin-top: 20px; background: #f9fafb; padding: 15px; border-radius: 12px;">
-                    <p style="font-weight: 600; margin-bottom: 10px;"><i class="fas fa-history"></i> Recent Alerts</p>
-                    <div id="recentAlerts">
-                        <div class="alert-item">
-                            <i class="fas fa-check-circle"></i> dev-server-1 (EC2) - 2 hours ago
-                        </div>
-                        <div class="alert-item">
-                            <i class="fas fa-check-circle"></i> old-database (RDS) - 5 hours ago
-                        </div>
-                        <div class="alert-item">
-                            <i class="fas fa-check-circle"></i> unattached-volume (EBS) - 1 day ago
-                        </div>
-                    </div>
-                </div>
+                <p class="big-number" id="monthly-cost">$1,250</p>
+                <p class="cost-source" id="cost-source">(Demo Data)</p>
             </div>
         </div>
 
         <!-- Cost Chart -->
         <div class="chart-section">
-            <h2><i class="fas fa-chart-line" style="color: #3b82f6;"></i> Cost Overview</h2>
-            <canvas id="costChart" style="height: 300px; margin-top: 20px;"></canvas>
+            <h2><i class="fas fa-chart-line"></i> AWS Cost Overview</h2>
+            <canvas id="costChart"></canvas>
         </div>
 
-        <!-- Cloud Tabs & Resources Table -->
+        <!-- Cloud Tabs -->
+        <div class="cloud-tabs">
+            <button class="tab-btn active" onclick="showCloud('aws')">
+                <i class="fab fa-aws"></i> AWS
+            </button>
+            <button class="tab-btn" onclick="showCloud('azure')">
+                <i class="fab fa-microsoft"></i> Azure
+            </button>
+            <button class="tab-btn" onclick="showCloud('gcp')">
+                <i class="fab fa-google"></i> Google Cloud
+            </button>
+        </div>
+
+        <!-- Resources Table -->
         <div class="table-section">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h2><i class="fas fa-list" style="color: #3b82f6;"></i> Cloud Resources</h2>
-                <div class="cloud-tabs">
-                    <button class="tab-btn active" onclick="showCloud('aws')"><i class="fab fa-aws"></i> AWS</button>
-                    <button class="tab-btn" onclick="showCloud('azure')"><i class="fab fa-microsoft"></i> Azure</button>
-                    <button class="tab-btn" onclick="showCloud('gcp')"><i class="fab fa-google"></i> GCP</button>
-                </div>
-            </div>
-            
-            <table>
+            <h2><i class="fas fa-list"></i> Cloud Resources <span id="data-source">(Demo Data)</span></h2>
+            <table id="resources-table">
                 <thead>
-    <tr>
-        <th>Resource</th>
-        <th>Name/Type</th>
-        <th>Cloud/Region</th>
-        <th>Status/CPU</th>
-        <th>Age/Activity</th>
-        <th>Monthly Cost</th>
-        <th>Action/Owner</th>
-    </tr>
-</thead>
-                <tbody id="resources-body"></tbody>
+                    <tr>
+                        <th>Resource ID</th>
+                        <th>Name</th>
+                        <th>Cloud</th>
+                        <th>Status</th>
+                        <th>Days Running</th>
+                        <th>Monthly Cost</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="resources-body">
+                    <!-- Demo data will be loaded by JavaScript -->
+                </tbody>
             </table>
         </div>
+
+        <!-- Footer -->
+        <footer>
+            <p>CloudOptima &copy; 2024 | Multi-Cloud Cost Optimization Tool</p>
+            <p class="footer-info">
+                <i class="fas fa-info-circle"></i> 
+                Connect AWS to see real cost data. Azure & GCP show demo data.
+            </p>
+        </footer>
     </div>
 
     <script>
-        // Your existing JavaScript functions remain exactly the same
+        // Demo data
         const demoInstances = [
             {id: 'i-0abc123def456', name: 'Web Server', cloud: 'aws', status: 'running', days: '45', cost: '$85'},
             {id: 'i-1def456ghi789', name: 'Database', cloud: 'aws', status: 'idle', days: '120', cost: '$120'},
@@ -523,277 +427,166 @@
             {id: 'gcp-instance-2', name: 'Backup Server', cloud: 'gcp', status: 'idle', days: '200', cost: '$75'}
         ];
 
+        // Auto-refresh variables
         let autoRefreshInterval = null;
         let refreshTimerInterval = null;
-        let timeLeft = 300;
+        let timeLeft = 300; // 5 minutes in seconds
         let isAWSConnected = false;
 
-      // Load demo data with proper idle/running indicators
-function loadDemoData() {
-    const tableBody = document.getElementById('resources-body');
-    tableBody.innerHTML = '';
-    
-    const demoInstances = [
-        {
-            id: 'i-0abc123def456',
-            name: 'Web Server',
-            cloud: 'aws',
-            status: 'running',
-            days: 45,
-            cost: 85.50,
-            region: 'us-east-1',
-            type: 't3.medium',
-            cpu: '12%',
-            lastActive: '2 min ago'
-        },
-        {
-            id: 'i-1def456ghi789',
-            name: 'Database',
-            cloud: 'aws',
-            status: 'idle',
-            days: 120,
-            cost: 120.75,
-            region: 'us-east-1',
-            type: 'r5.large',
-            cpu: '0.5%',
-            lastActive: '7 days ago',
-            owner: 'john@company.com'
-        },
-        {
-            id: 'vm-prod-app-01',
-            name: 'App Server',
-            cloud: 'azure',
-            status: 'running',
-            days: 30,
-            cost: 95.25,
-            region: 'eastus',
-            type: 'D2s v3',
-            cpu: '45%',
-            lastActive: '5 min ago'
-        },
-        {
-            id: 'vm-dev-test-02',
-            name: 'Test VM',
-            cloud: 'azure',
-            status: 'idle',
-            days: 90,
-            cost: 65.00,
-            region: 'westus',
-            type: 'B2s',
-            cpu: '1.2%',
-            lastActive: '15 days ago',
-            owner: 'sarah@company.com'
-        },
-        {
-            id: 'gcp-instance-1',
-            name: 'Kubernetes Node',
-            cloud: 'gcp',
-            status: 'running',
-            days: 15,
-            cost: 110.30,
-            region: 'us-central1',
-            type: 'n2-standard-4',
-            cpu: '32%',
-            lastActive: '10 min ago'
-        },
-        {
-            id: 'gcp-instance-2',
-            name: 'Backup Server',
-            cloud: 'gcp',
-            status: 'idle',
-            days: 200,
-            cost: 75.40,
-            region: 'us-west1',
-            type: 'e2-standard-2',
-            cpu: '0.1%',
-            lastActive: '30 days ago',
-            owner: 'mike@company.com'
+        // Load demo data on page load
+        function loadDemoData() {
+            const tableBody = document.getElementById('resources-body');
+            tableBody.innerHTML = '';
+            
+            demoInstances.forEach(instance => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${instance.id}</td>
+                    <td>${instance.name}</td>
+                    <td><span class="cloud-badge ${instance.cloud}">${instance.cloud.toUpperCase()}</span></td>
+                    <td><span class="status-badge ${instance.status}">${instance.status.toUpperCase()}</span></td>
+                    <td>${instance.days} days</td>
+                    <td>${instance.cost}/month</td>
+                    <td>
+                        ${instance.status === 'idle' ? 
+                            `<button class="btn-action" onclick="sendAlert('${instance.id}')">
+                                <i class="fas fa-bell"></i> Alert
+                            </button>` : 
+                            `<span class="text-muted">No action</span>`
+                        }
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
         }
-    ];
 
-    demoInstances.forEach(instance => {
-        const row = document.createElement('tr');
-        
-        // Determine status color
-        const statusColor = instance.status === 'running' ? '#10b981' : '#ef4444';
-        const statusBg = instance.status === 'running' ? '#d1fae5' : '#fee2e2';
-        
-        row.innerHTML = `
-            <td style="font-family: monospace;">${instance.id}</td>
-            <td>
-                <strong>${instance.name}</strong><br>
-                <small style="color: #6b7280;">${instance.type}</small>
-            </td>
-            <td>
-                <span style="display: inline-flex; align-items: center; gap: 4px;">
-                    <i class="fab fa-${instance.cloud}" style="color: ${instance.cloud === 'aws' ? '#ff9900' : instance.cloud === 'azure' ? '#0078d4' : '#4285f4'};"></i>
-                    ${instance.cloud.toUpperCase()}
-                </span>
-                <br>
-                <small style="color: #6b7280;">${instance.region}</small>
-            </td>
-            <td>
-                <span style="background: ${statusBg}; color: ${statusColor}; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: 600;">
-                    <i class="fas fa-${instance.status === 'running' ? 'play' : 'pause'}" style="margin-right: 4px;"></i>
-                    ${instance.status.toUpperCase()}
-                </span>
-                <br>
-                <small style="color: #6b7280;">CPU: ${instance.cpu}</small>
-            </td>
-            <td>
-                <strong>${instance.days} days</strong><br>
-                <small style="color: #6b7280;">Last: ${instance.lastActive}</small>
-            </td>
-            <td>
-                <strong style="color: ${instance.status === 'idle' ? '#ef4444' : '#111827'};">
-                    $${instance.cost.toFixed(2)}/mo
-                </strong>
-                ${instance.status === 'idle' ? 
-                    `<br><small style="color: #ef4444;">⚠️ Potential savings</small>` : 
-                    ''}
-            </td>
-            <td>
-                ${instance.status === 'idle' ? 
-                    `<div style="display: flex; flex-direction: column; gap: 4px;">
-                        <button onclick="sendAlert('${instance.id}')" style="padding: 6px 12px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px;">
-                            <i class="fas fa-bell"></i> Alert
-                        </button>
-                        <small style="color: #6b7280;">Owner: ${instance.owner || 'Unknown'}</small>
-                    </div>` : 
-                    `<span style="color: #9ca3af; font-size: 12px;">✓ Active</span>`
+        // Chart for cost visualization
+        const ctx = document.getElementById('costChart').getContext('2d');
+        const costChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [], // Will be populated with dates
+                datasets: [{
+                    label: 'AWS Daily Cost (USD)',
+                    data: [],
+                    borderColor: '#36a2eb',
+                    backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                    tension: 0.3
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {display: true, text: 'AWS Daily Costs (Last 30 Days)'}
                 }
-            </td>
-        `;
-        tableBody.appendChild(row);
-    });
-    
-    // Update summary stats
-    const idleCount = demoInstances.filter(i => i.status === 'idle').length;
-    const totalCost = demoInstances.reduce((sum, i) => sum + i.cost, 0);
-    
-    document.getElementById('total-resources').innerText = demoInstances.length;
-    document.getElementById('idle-resources').innerText = idleCount;
-    document.getElementById('idleCount').innerText = idleCount;
-    document.getElementById('monthly-cost').innerText = '$' + totalCost.toFixed(2);
-}
-        
+            }
+        });
 
-       // Chart with sample data (will update with real AWS data when connected)
-const ctx = document.getElementById('costChart').getContext('2d');
-const costChart = new Chart(ctx, {
-    type: 'line',
-    data: {
-        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-        datasets: [
-            {
-                label: 'AWS Cost (USD)',
-                data: [1250, 1180, 1320, 1280, 1450, 1520, 1480, 1350, 1420, 1380, 1250, 1180],
-                borderColor: '#3b82f6',
-                backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                tension: 0.4,
-                fill: true
-            },
-            {
-                label: 'Azure Cost (USD)',
-                data: [850, 820, 910, 880, 950, 1020, 980, 920, 890, 870, 830, 790],
-                borderColor: '#10b981',
-                backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                tension: 0.4,
-                fill: true,
-                hidden: true
-            },
-            {
-                label: 'GCP Cost (USD)',
-                data: [650, 620, 710, 680, 750, 820, 780, 720, 690, 670, 630, 590],
-                borderColor: '#f59e0b',
-                backgroundColor: 'rgba(245, 158, 11, 0.1)',
-                tension: 0.4,
-                fill: true,
-                hidden: true
-            }
-        ]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                display: true,
-                position: 'top',
-                labels: { usePointStyle: true }
-            },
-            tooltip: { mode: 'index', intersect: false },
-            title: {
-                display: true,
-                text: 'Monthly Cloud Costs (Last 12 Months)',
-                font: { size: 16, weight: 'bold' }
-            }
-        },
-        scales: {
-            y: {
-                beginAtZero: true,
-                grid: { color: 'rgba(0,0,0,0.05)' },
-                title: { display: true, text: 'Cost (USD)' }
-            },
-            x: {
-                grid: { display: false },
-                title: { display: true, text: 'Month' }
-            }
-        }
-    }
-});
-
+        // AWS Connection
         async function connectAWS() {
-            // Your existing connectAWS function
             const key = document.getElementById('aws-key').value.trim();
             const secret = document.getElementById('aws-secret').value.trim();
+            
+            console.log('Connecting with key:', key.substring(0, 8) + '...');
             
             if (!key || !secret) {
                 alert('Please enter AWS Access Key and Secret Key');
                 return;
             }
 
-            const connectBtn = event.target;
+            const connectBtn = document.querySelector('.btn-connect');
             connectBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Connecting...';
             connectBtn.disabled = true;
             
             try {
+                // 1. Fetch cost data
+                console.log('Fetching cost data...');
                 const costResponse = await fetch('https://cloudoptima.onrender.com/api/aws/cost', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ accessKeyId: key, secretAccessKey: secret })
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        accessKeyId: key,
+                        secretAccessKey: secret
+                    })
                 });
                 
-                if (!costResponse.ok) throw new Error('Connection failed');
+                console.log('Cost response status:', costResponse.status);
+                
+                if (!costResponse.ok) {
+                    const errorText = await costResponse.text();
+                    throw new Error(`HTTP ${costResponse.status}: ${errorText.substring(0, 100)}`);
+                }
                 
                 const costData = await costResponse.json();
+                console.log('Cost data received:', costData);
                 
+                if (costData.error) {
+                    throw new Error(`AWS Error: ${costData.error}`);
+                }
+                
+                // 2. Fetch AWS instances
+                console.log('Fetching instances...');
                 const instancesResponse = await fetch('https://cloudoptima.onrender.com/api/aws/instances', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ accessKeyId: key, secretAccessKey: secret })
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        accessKeyId: key,
+                        secretAccessKey: secret
+                    })
                 });
                 
-                const instancesData = await instancesResponse.json();
+                console.log('Instances response status:', instancesResponse.status);
                 
-                document.getElementById('monthly-cost').innerText = '$' + (costData.total_cost || '0');
+                if (!instancesResponse.ok) {
+                    const errorText = await instancesResponse.text();
+                    throw new Error(`HTTP ${instancesResponse.status}: ${errorText.substring(0, 100)}`);
+                }
+                
+                const instancesData = await instancesResponse.json();
+                console.log('Instances data:', instancesData);
+                
+                if (instancesData.error) {
+                    throw new Error(`AWS Error: ${instancesData.error}`);
+                }
+                
+                // Update dashboard with real data
+                document.getElementById('monthly-cost').innerText = 
+                    '$' + (costData.total_cost || '0');
                 document.getElementById('cost-source').innerText = '(Real AWS Data)';
                 document.getElementById('data-source').innerText = '(Real AWS Instances)';
-                document.getElementById('idle-resources').innerText = instancesData.total_instances || '0';
-                document.getElementById('total-resources').innerText = instancesData.total_instances || '0';
                 
+                // Update summary cards
+                document.getElementById('idle-resources').innerText = 
+                    instancesData.total_instances || '0';
+                document.getElementById('total-resources').innerText = 
+                    instancesData.total_instances || '0';
+                
+                // Update chart with real dates and costs
                 costChart.data.labels = costData.daily_costs?.map(d => d.date.substring(5)) || [];
                 costChart.data.datasets[0].data = costData.daily_costs?.map(d => parseFloat(d.cost)) || [];
                 costChart.update();
                 
+                // Update resources table with AWS instances
                 updateResourcesTable(instancesData.idle_instances);
                 
-                alert('✅ AWS connected successfully!');
+                // Show success and enable auto-refresh
+                alert('✅ AWS connected successfully! Auto-refresh enabled (5 minutes).');
                 
+                // Enable auto-refresh
                 isAWSConnected = true;
+                document.querySelector('.btn-connect').style.display = 'none';
+                document.querySelector('.btn-disconnect').style.display = 'inline-block';
+                document.getElementById('refresh-status').style.display = 'block';
                 startAutoRefresh();
                 
             } catch (error) {
+                console.error('Full error:', error);
                 alert('❌ Failed to connect AWS: ' + error.message);
             } finally {
                 connectBtn.innerHTML = '<i class="fas fa-plug"></i> Connect AWS';
@@ -801,51 +594,69 @@ const costChart = new Chart(ctx, {
             }
         }
 
+        // Disconnect AWS
         function disconnectAWS() {
             isAWSConnected = false;
             stopAutoRefresh();
+            document.querySelector('.btn-connect').style.display = 'inline-block';
+            document.querySelector('.btn-disconnect').style.display = 'none';
+            document.getElementById('refresh-status').style.display = 'none';
             document.getElementById('cost-source').innerText = '(Demo Data)';
             document.getElementById('data-source').innerText = '(Demo Data)';
             loadDemoData();
-            alert('🔌 AWS disconnected.');
+            alert('🔌 AWS disconnected. Auto-refresh stopped.');
         }
 
+        // Auto-refresh functions
         function startAutoRefresh() {
-            stopAutoRefresh();
-            timeLeft = 300;
+            stopAutoRefresh(); // Clear any existing intervals
+            timeLeft = 300; // Reset to 5 minutes
             
+            // Update timer every second
             refreshTimerInterval = setInterval(() => {
                 timeLeft--;
                 const minutes = Math.floor(timeLeft / 60);
                 const seconds = timeLeft % 60;
-                const timerEl = document.getElementById('refresh-timer');
-                if (timerEl) timerEl.innerText = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                document.getElementById('refresh-timer').innerText = 
+                    `${minutes}:${seconds.toString().padStart(2, '0')}`;
                 
                 if (timeLeft <= 0) {
                     refreshAWSData();
-                    timeLeft = 300;
+                    timeLeft = 300; // Reset timer
                 }
             }, 1000);
             
+            // First refresh
             refreshAWSData();
+            console.log('✅ Auto-refresh enabled (every 5 minutes)');
         }
-
+        
         function stopAutoRefresh() {
-            if (refreshTimerInterval) clearInterval(refreshTimerInterval);
-            if (autoRefreshInterval) clearInterval(autoRefreshInterval);
+            if (refreshTimerInterval) {
+                clearInterval(refreshTimerInterval);
+                refreshTimerInterval = null;
+            }
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+                autoRefreshInterval = null;
+            }
+            console.log('⏹️ Auto-refresh disabled');
         }
-
+        
         async function refreshAWSData() {
-            const key = document.getElementById('aws-key')?.value.trim();
-            const secret = document.getElementById('aws-secret')?.value.trim();
+            const key = document.getElementById('aws-key').value.trim();
+            const secret = document.getElementById('aws-secret').value.trim();
             
             if (!key || !secret || !isAWSConnected) return;
             
             try {
+                console.log('🔄 Auto-refreshing AWS data...');
+                
+                // Refresh cost data
                 const costResponse = await fetch('https://cloudoptima.onrender.com/api/aws/cost', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ accessKeyId: key, secretAccessKey: secret })
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({accessKeyId: key, secretAccessKey: secret})
                 });
                 
                 if (!costResponse.ok) return;
@@ -853,22 +664,34 @@ const costChart = new Chart(ctx, {
                 const costData = await costResponse.json();
                 if (costData.error) return;
                 
+                // Silent update of chart
                 costChart.data.labels = costData.daily_costs?.map(d => d.date.substring(5)) || [];
                 costChart.data.datasets[0].data = costData.daily_costs?.map(d => parseFloat(d.cost)) || [];
                 costChart.update();
                 
+                // Update last scan time
                 document.getElementById('last-scan').innerText = new Date().toLocaleTimeString();
+                
+                console.log('✅ Auto-refresh completed');
+                
             } catch (error) {
                 console.log('Auto-refresh failed:', error.message);
             }
         }
 
+        // Function to update resources table with AWS instances
         function updateResourcesTable(instances) {
             const tableBody = document.getElementById('resources-body');
-            tableBody.innerHTML = '';
+            tableBody.innerHTML = ''; // Clear demo data
             
             if (!instances || instances.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:20px;"><i class="fas fa-check-circle" style="color:#10b981;"></i> No idle instances found</td></tr>';
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align:center; padding:20px;">
+                            <i class="fas fa-check-circle" style="color:#28a745;"></i>
+                            No idle instances found in your AWS account.
+                        </td>
+                    </tr>`;
                 return;
             }
             
@@ -881,20 +704,49 @@ const costChart = new Chart(ctx, {
                     <td><span class="status-badge idle">IDLE</span></td>
                     <td>${instance.days_running} days</td>
                     <td>$${instance.estimated_savings || '50'}/month</td>
-                    <td><button class="btn btn-outline btn-sm" onclick="sendAlert('${instance.id}')"><i class="fas fa-bell"></i> Alert</button></td>
+                    <td>
+                        <button class="btn-action" onclick="sendAlert('${instance.id}')">
+                            <i class="fas fa-bell"></i> Alert
+                        </button>
+                    </td>
                 `;
                 tableBody.appendChild(row);
             });
         }
 
+        // Demo mode toggle
+        function toggleDemoMode() {
+            const btn = document.getElementById('demo-btn');
+            const isDemo = btn.innerText.includes('ON');
+            
+            if (isDemo) {
+                btn.innerHTML = '<i class="fas fa-database"></i> Demo Mode: OFF';
+                btn.style.background = '#28a745';
+                document.getElementById('cost-source').innerText = '(Real AWS Data)';
+                if (isAWSConnected) {
+                    startAutoRefresh();
+                }
+            } else {
+                btn.innerHTML = '<i class="fas fa-play-circle"></i> Demo Mode: ON';
+                btn.style.background = '#007bff';
+                document.getElementById('cost-source').innerText = '(Demo Data)';
+                document.getElementById('data-source').innerText = '(Demo Data)';
+                stopAutoRefresh();
+                loadDemoData(); // Reload demo data
+            }
+        }
+
+        // Cloud tabs
         function showCloud(cloud) {
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
-            // Filter logic would go here
+            // Filter table by cloud
+            console.log('Showing:', cloud);
         }
 
+        // Existing functions
         function runScan() {
-            alert('Use "Connect AWS" for real scan.');
+            alert('Scan feature requires backend connection. Use "Connect AWS" for real scan.');
         }
 
         function sendAlert(resourceId) {
@@ -903,24 +755,24 @@ const costChart = new Chart(ctx, {
             
             fetch('https://cloudoptima.onrender.com/api/alert/send', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ resource_id: resourceId, email: email })
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    resource_id: resourceId,
+                    email: email
+                })
             })
             .then(res => res.json())
-            .then(data => alert(`✅ ${data.message}`))
+            .then(data => {
+                alert(`✅ ${data.message}`);
+            })
             .catch(error => {
                 alert('❌ Alert service unavailable. Using demo mode.');
                 console.log('Demo alert for:', resourceId);
             });
         }
 
-        function logout() {
-            localStorage.clear();
-            sessionStorage.clear();
-            window.location.replace('/login.html');
-        }
-
+        // Load demo data on page load
         document.addEventListener('DOMContentLoaded', loadDemoData);
     </script>
 </body>
-</html>
+</html> 
