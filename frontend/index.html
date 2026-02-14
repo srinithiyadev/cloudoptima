@@ -2,10 +2,24 @@
 <html lang="en">
 <head>
     <script>
-    // PROTECT DASHBOARD - CHECK LOGIN
-    if (!localStorage.getItem('demo_mode') && !localStorage.getItem('token')) {
-        window.location.href = '/login.html';
-    }
+    // FORCE LOGIN CHECK - STRICT VERSION
+    (function() {
+        // Check if user is logged in
+        const isLoggedIn = localStorage.getItem('demo_mode') === 'true' || localStorage.getItem('token');
+        
+        if (!isLoggedIn) {
+            // Not logged in - redirect to login
+            window.location.replace('/login.html');
+        }
+        
+        // Display user email if available
+        document.addEventListener('DOMContentLoaded', function() {
+            const user = JSON.parse(localStorage.getItem('user') || '{"email":"demo@cloudoptima.com"}');
+            const emailSpan = document.getElementById('userEmailText');
+            if (emailSpan) emailSpan.textContent = user.email;
+        });
+    })();
+    
     // AWS Connection Functions
 function connectAWS() {
     const accessKey = document.getElementById('aws-key').value.trim();
