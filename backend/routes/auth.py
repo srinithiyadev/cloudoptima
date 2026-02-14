@@ -1,10 +1,48 @@
 from flask import Blueprint, request, jsonify
-from models import db, User, UserSettings
 import jwt
 import datetime
 import os
 
 auth_bp = Blueprint('auth', __name__)
+
+# Mock users for testing (remove this when you add database)
+mock_users = {
+    'demo@cloudoptima.com': {
+        'password': 'demo123',
+        'name': 'Demo User',
+        'id': 1
+    }
+}
+
+@auth_bp.route('/api/auth/login', methods=['POST'])
+def login():
+    try:
+        data = request.json
+        email = data.get('email')
+        password = data.get('password')
+        
+        # Check mock user
+        if email in mock_users and mock_users[email]['password'] == password:
+            # Generate token
+            token = jwt.encode({
+                'user_id': mock_users[email]['id'],
+                'email': email,
+                'exp': datetime.datetime.utcnow() + datetime.timedelta(days=1)
+            }, os.environ.get('SECRET_KEY', 'dev-secret-key'), algorithm='HS256')
+            
+            return jsonify({
+                'token': token,
+                'user': {
+                    'id': mock_users[email]['id'],
+                    'name': mock_users[email]['name'],
+                    'email': email
+                }
+            }), 200
+        
+        return jsonify({'message': 'Invalid credentials'}), 401
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @auth_bp.route('/api/auth/register', methods=['POST'])
 def register():
@@ -15,59 +53,21 @@ def register():
         password = data.get('password')
         
         # Check if user exists
-        if User.query.filter_by(email=email).first():
+        if email in mock_users:
             return jsonify({'message': 'Email already registered'}), 400
         
-        # Create user
-        user = User(name=name, email=email)
-        user.set_password(password)
-        
-        db.session.add(user)
-        db.session.flush()  # Get user.id
-        
-        # Create default settings
-        settings = UserSettings(
-            user_id=user.id,
-            alert_email=email,
-            scan_frequency=6,
-            auto_scan_enabled=True
-        )
-        db.session.add(settings)
-        db.session.commit()
+        # Add mock user (replace with database later)
+        mock_users[email] = {
+            'password': password,
+            'name': name,
+            'id': len(mock_users) + 1
+        }
         
         return jsonify({'message': 'User created successfully'}), 201
         
     except Exception as e:
-        db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
-@auth_bp.route('/api/auth/login', methods=['POST'])
-def login():
-    try:
-        data = request.json
-        email = data.get('email')
-        password = data.get('password')
-        
-        user = User.query.filter_by(email=email).first()
-        
-        if not user or not user.check_password(password):
-            return jsonify({'message': 'Invalid credentials'}), 401
-        
-        # Generate JWT token
-        token = jwt.encode({
-            'user_id': user.id,
-            'email': user.email,
-            'exp': datetime.datetime.utcnow() + datetime.timedelta(days=1)
-        }, os.environ.get('SECRET_KEY', 'dev-secret-key'), algorithm='HS256')
-        
-        return jsonify({
-            'token': token,
-            'user': {
-                'id': user.id,
-                'name': user.name,
-                'email': user.email
-            }
-        }), 200
-        
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+@auth_bp.route('/api/auth/test', methods=['GET'])
+def test():
+    return jsonify({'message': 'Auth routes working!'})
