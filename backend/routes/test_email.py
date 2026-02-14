@@ -2,13 +2,12 @@ from flask import Blueprint, request, jsonify
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-from brevo_email import send_idle_alert
+from brevo_email import send_test_alert
 
-# THIS IS YOUR BLUEPRINT
 test_bp = Blueprint('test', __name__)
 
 @test_bp.route('/api/email/test-alert', methods=['POST'])
-def send_test_alert():
+def send_test_alert_endpoint():
     try:
         data = request.json
         email = data.get('email')
@@ -16,19 +15,14 @@ def send_test_alert():
         if not email:
             return jsonify({'error': 'Email required'}), 400
         
-        test_resource = {
-            'id': 'i-test-123456',
-            'name': 'test-server',
-            'type': 'EC2',
-            'region': 'us-east-1',
-            'idle_days': 7,
-            'monthly_cost': 45.50
-        }
-        
-        result = send_idle_alert(email, test_resource)
+        # Call the test function - it doesn't need parameters
+        result = send_test_alert()
         
         if result:
-            return jsonify({'success': True, 'message': 'Test alert sent!'})
+            return jsonify({
+                'success': True, 
+                'message': f'Test alert sent! Check {email} (email sent to srinithiyadevops@gmail.com)'
+            })
         else:
             return jsonify({'error': 'Failed to send email'}), 500
             
