@@ -497,16 +497,16 @@
             
             <table>
                 <thead>
-                    <tr>
-                        <th>Resource ID</th>
-                        <th>Name</th>
-                        <th>Cloud</th>
-                        <th>Status</th>
-                        <th>Days Running</th>
-                        <th>Monthly Cost</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
+    <tr>
+        <th>Resource</th>
+        <th>Name/Type</th>
+        <th>Cloud/Region</th>
+        <th>Status/CPU</th>
+        <th>Age/Activity</th>
+        <th>Monthly Cost</th>
+        <th>Action/Owner</th>
+    </tr>
+</thead>
                 <tbody id="resources-body"></tbody>
             </table>
         </div>
@@ -528,53 +528,220 @@
         let timeLeft = 300;
         let isAWSConnected = false;
 
-        function loadDemoData() {
-            const tableBody = document.getElementById('resources-body');
-            tableBody.innerHTML = '';
-            
-            demoInstances.forEach(instance => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${instance.id}</td>
-                    <td>${instance.name}</td>
-                    <td><span class="cloud-badge ${instance.cloud}">${instance.cloud.toUpperCase()}</span></td>
-                    <td><span class="status-badge ${instance.status}">${instance.status.toUpperCase()}</span></td>
-                    <td>${instance.days} days</td>
-                    <td>${instance.cost}/month</td>
-                    <td>
-                        ${instance.status === 'idle' ? 
-                            `<button class="btn btn-outline btn-sm" onclick="sendAlert('${instance.id}')">
-                                <i class="fas fa-bell"></i> Alert
-                            </button>` : 
-                            `<span class="text-muted">No action</span>`
-                        }
-                    </td>
-                `;
-                tableBody.appendChild(row);
-            });
+      // Load demo data with proper idle/running indicators
+function loadDemoData() {
+    const tableBody = document.getElementById('resources-body');
+    tableBody.innerHTML = '';
+    
+    const demoInstances = [
+        {
+            id: 'i-0abc123def456',
+            name: 'Web Server',
+            cloud: 'aws',
+            status: 'running',
+            days: 45,
+            cost: 85.50,
+            region: 'us-east-1',
+            type: 't3.medium',
+            cpu: '12%',
+            lastActive: '2 min ago'
+        },
+        {
+            id: 'i-1def456ghi789',
+            name: 'Database',
+            cloud: 'aws',
+            status: 'idle',
+            days: 120,
+            cost: 120.75,
+            region: 'us-east-1',
+            type: 'r5.large',
+            cpu: '0.5%',
+            lastActive: '7 days ago',
+            owner: 'john@company.com'
+        },
+        {
+            id: 'vm-prod-app-01',
+            name: 'App Server',
+            cloud: 'azure',
+            status: 'running',
+            days: 30,
+            cost: 95.25,
+            region: 'eastus',
+            type: 'D2s v3',
+            cpu: '45%',
+            lastActive: '5 min ago'
+        },
+        {
+            id: 'vm-dev-test-02',
+            name: 'Test VM',
+            cloud: 'azure',
+            status: 'idle',
+            days: 90,
+            cost: 65.00,
+            region: 'westus',
+            type: 'B2s',
+            cpu: '1.2%',
+            lastActive: '15 days ago',
+            owner: 'sarah@company.com'
+        },
+        {
+            id: 'gcp-instance-1',
+            name: 'Kubernetes Node',
+            cloud: 'gcp',
+            status: 'running',
+            days: 15,
+            cost: 110.30,
+            region: 'us-central1',
+            type: 'n2-standard-4',
+            cpu: '32%',
+            lastActive: '10 min ago'
+        },
+        {
+            id: 'gcp-instance-2',
+            name: 'Backup Server',
+            cloud: 'gcp',
+            status: 'idle',
+            days: 200,
+            cost: 75.40,
+            region: 'us-west1',
+            type: 'e2-standard-2',
+            cpu: '0.1%',
+            lastActive: '30 days ago',
+            owner: 'mike@company.com'
         }
+    ];
 
-        const ctx = document.getElementById('costChart').getContext('2d');
-        const costChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: [],
-                datasets: [{
-                    label: 'AWS Daily Cost (USD)',
-                    data: [],
-                    borderColor: '#3b82f6',
-                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                    tension: 0.3
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false }
+    demoInstances.forEach(instance => {
+        const row = document.createElement('tr');
+        
+        // Determine status color
+        const statusColor = instance.status === 'running' ? '#10b981' : '#ef4444';
+        const statusBg = instance.status === 'running' ? '#d1fae5' : '#fee2e2';
+        
+        row.innerHTML = `
+            <td style="font-family: monospace;">${instance.id}</td>
+            <td>
+                <strong>${instance.name}</strong><br>
+                <small style="color: #6b7280;">${instance.type}</small>
+            </td>
+            <td>
+                <span style="display: inline-flex; align-items: center; gap: 4px;">
+                    <i class="fab fa-${instance.cloud}" style="color: ${instance.cloud === 'aws' ? '#ff9900' : instance.cloud === 'azure' ? '#0078d4' : '#4285f4'};"></i>
+                    ${instance.cloud.toUpperCase()}
+                </span>
+                <br>
+                <small style="color: #6b7280;">${instance.region}</small>
+            </td>
+            <td>
+                <span style="background: ${statusBg}; color: ${statusColor}; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: 600;">
+                    <i class="fas fa-${instance.status === 'running' ? 'play' : 'pause'}" style="margin-right: 4px;"></i>
+                    ${instance.status.toUpperCase()}
+                </span>
+                <br>
+                <small style="color: #6b7280;">CPU: ${instance.cpu}</small>
+            </td>
+            <td>
+                <strong>${instance.days} days</strong><br>
+                <small style="color: #6b7280;">Last: ${instance.lastActive}</small>
+            </td>
+            <td>
+                <strong style="color: ${instance.status === 'idle' ? '#ef4444' : '#111827'};">
+                    $${instance.cost.toFixed(2)}/mo
+                </strong>
+                ${instance.status === 'idle' ? 
+                    `<br><small style="color: #ef4444;">⚠️ Potential savings</small>` : 
+                    ''}
+            </td>
+            <td>
+                ${instance.status === 'idle' ? 
+                    `<div style="display: flex; flex-direction: column; gap: 4px;">
+                        <button onclick="sendAlert('${instance.id}')" style="padding: 6px 12px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px;">
+                            <i class="fas fa-bell"></i> Alert
+                        </button>
+                        <small style="color: #6b7280;">Owner: ${instance.owner || 'Unknown'}</small>
+                    </div>` : 
+                    `<span style="color: #9ca3af; font-size: 12px;">✓ Active</span>`
                 }
+            </td>
+        `;
+        tableBody.appendChild(row);
+    });
+    
+    // Update summary stats
+    const idleCount = demoInstances.filter(i => i.status === 'idle').length;
+    const totalCost = demoInstances.reduce((sum, i) => sum + i.cost, 0);
+    
+    document.getElementById('total-resources').innerText = demoInstances.length;
+    document.getElementById('idle-resources').innerText = idleCount;
+    document.getElementById('idleCount').innerText = idleCount;
+    document.getElementById('monthly-cost').innerText = '$' + totalCost.toFixed(2);
+}
+        
+
+       // Chart with sample data (will update with real AWS data when connected)
+const ctx = document.getElementById('costChart').getContext('2d');
+const costChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+        datasets: [
+            {
+                label: 'AWS Cost (USD)',
+                data: [1250, 1180, 1320, 1280, 1450, 1520, 1480, 1350, 1420, 1380, 1250, 1180],
+                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                tension: 0.4,
+                fill: true
+            },
+            {
+                label: 'Azure Cost (USD)',
+                data: [850, 820, 910, 880, 950, 1020, 980, 920, 890, 870, 830, 790],
+                borderColor: '#10b981',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                tension: 0.4,
+                fill: true,
+                hidden: true
+            },
+            {
+                label: 'GCP Cost (USD)',
+                data: [650, 620, 710, 680, 750, 820, 780, 720, 690, 670, 630, 590],
+                borderColor: '#f59e0b',
+                backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                tension: 0.4,
+                fill: true,
+                hidden: true
             }
-        });
+        ]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: true,
+                position: 'top',
+                labels: { usePointStyle: true }
+            },
+            tooltip: { mode: 'index', intersect: false },
+            title: {
+                display: true,
+                text: 'Monthly Cloud Costs (Last 12 Months)',
+                font: { size: 16, weight: 'bold' }
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                grid: { color: 'rgba(0,0,0,0.05)' },
+                title: { display: true, text: 'Cost (USD)' }
+            },
+            x: {
+                grid: { display: false },
+                title: { display: true, text: 'Month' }
+            }
+        }
+    }
+});
 
         async function connectAWS() {
             // Your existing connectAWS function
