@@ -78,10 +78,12 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 // Logout function
 function logout() {
-    localStorage.removeItem('demo_mode');
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    window.location.href = '/login.html';
+    // Clear ALL storage
+    localStorage.clear();
+    sessionStorage.clear();
+    
+    // Force redirect to login - use replace to prevent back button issues
+    window.location.replace('/login.html');
 }
 
 // Show user email on dashboard

@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
     <title>CloudOptima Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -533,13 +536,33 @@
     </div>
 
     <script>
-        // ===== AUTH CHECK =====
-        (function() {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                window.location.replace('/login.html');
-                return;
-            }
+
+       // ===== STRONG AUTH CHECK - NO LOOP =====
+(function() {
+    // Check if user is authenticated
+    const token = localStorage.getItem('token');
+    const user = localStorage.getItem('user');
+    
+    // If no token, redirect to login
+    if (!token || !user) {
+        console.log('No token found - redirecting to login');
+        window.location.replace('/login.html');
+        return;
+    }
+    
+    // Validate user data
+    try {
+        const userData = JSON.parse(user);
+        if (!userData.email) {
+            throw new Error('Invalid user data');
+        }
+        console.log('User authenticated:', userData.email);
+    } catch (e) {
+        console.error('Invalid user data, clearing storage');
+        localStorage.clear();
+        window.location.replace('/login.html');
+    }
+
             
             // Display user email
             try {
@@ -549,7 +572,7 @@
             } catch (e) {
                 console.error('Error parsing user data');
             }
-        })();
+    })();
 
         // ===== LOGOUT =====
         function logout() {
