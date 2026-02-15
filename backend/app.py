@@ -1,4 +1,4 @@
-kfrom flask import Flask, jsonify
+from flask import Flask, jsonify
 from flask_cors import CORS
 from alert import alert_bp
 from aws_api import aws_bp
