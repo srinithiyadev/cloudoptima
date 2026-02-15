@@ -304,3 +304,38 @@ footer {
         width: 100%;
     }
 }
+/* Navigation Links */
+.nav-links {
+    display: flex;
+    gap: 10px;
+    margin-right: 20px;
+}
+
+.nav-btn {
+    padding: 10px 20px;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.nav-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+}
+
+.nav-btn.active {
+    background: #00b894;
+    border-color: #00b894;
+}
+
+/* Header Info - Update existing */
+.header-info {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
