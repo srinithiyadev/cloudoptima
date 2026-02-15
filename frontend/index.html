@@ -536,42 +536,23 @@
     </div>
 
     <script>
-
-       // ===== STRONG AUTH CHECK - NO LOOP =====
-(function() {
-    // Check if user is authenticated
-    const token = localStorage.getItem('token');
-    const user = localStorage.getItem('user');
-    
-    // If no token, redirect to login
-    if (!token || !user) {
-        console.log('No token found - redirecting to login');
-        window.location.replace('/login.html');
-        return;
-    }
-    
-    // Validate user data
-    try {
-        const userData = JSON.parse(user);
-        if (!userData.email) {
-            throw new Error('Invalid user data');
+        
+    // ===== SIMPLE AUTH CHECK =====
+    (function() {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.replace('/login.html');
+            return;
         }
-        console.log('User authenticated:', userData.email);
-    } catch (e) {
-        console.error('Invalid user data, clearing storage');
-        localStorage.clear();
-        window.location.replace('/login.html');
-    }
 
-            
-            // Display user email
-            try {
-                const user = JSON.parse(localStorage.getItem('user') || '{}');
-                const emailSpan = document.getElementById('userEmailText');
-                if (emailSpan) emailSpan.textContent = user.email || 'User';
-            } catch (e) {
-                console.error('Error parsing user data');
-            }
+        // Display user email
+        try {
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            const emailSpan = document.getElementById('userEmailText');
+            if (emailSpan) emailSpan.textContent = user.email || 'User';
+        } catch (e) {
+            console.error('Error parsing user data');
+        }
     })();
 
         // ===== LOGOUT =====

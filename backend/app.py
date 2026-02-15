@@ -2,14 +2,16 @@ from flask import Flask, jsonify
 from flask_cors import CORS
 from alert import alert_bp
 from aws_api import aws_bp
+from routes.test_email import test_bp  # ← ADD THIS IMPORT
 import os
 
 app = Flask(__name__)
 CORS(app)
 
-# Register blueprints - ADD THESE TWO LINES!
+# Register blueprints
 app.register_blueprint(aws_bp, url_prefix='/api/aws')
 app.register_blueprint(alert_bp, url_prefix='/api/alert')
+app.register_blueprint(test_bp)  # ← ADD THIS REGISTRATION
 
 @app.route('/health')
 def health_check():

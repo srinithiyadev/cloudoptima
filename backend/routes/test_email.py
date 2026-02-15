@@ -15,13 +15,13 @@ def send_test_alert_endpoint():
         if not email:
             return jsonify({'error': 'Email required'}), 400
         
-        # Call the test function - it doesn't need parameters
+        # Call the test function
         result = send_test_alert()
         
         if result:
             return jsonify({
                 'success': True, 
-                'message': f'Test alert sent! Check {email} (email sent to srinithiyadevops@gmail.com)'
+                'message': f'Test alert sent! Check your inbox'
             })
         else:
             return jsonify({'error': 'Failed to send email'}), 500
