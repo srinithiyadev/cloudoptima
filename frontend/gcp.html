@@ -366,23 +366,54 @@
                 gap: 12px;
             }
         }
+        .nav-links {
+    display: flex;
+    gap: 10px;
+    margin-right: 20px;
+}
+
+.nav-btn {
+    padding: 10px 20px;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.nav-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+}
     </style>
 </head>
 <body>
-    <div class="header">
-        <div class="logo">
-            <h1><i class="fas fa-cloud"></i> CloudOptima - GCP</h1>
-        </div>
-        <div class="user-menu">
-            <div class="user-info">
-                <i class="fas fa-user-circle"></i>
-                <span id="userEmailText">Loading...</span>
-            </div>
-            <button onclick="logout()" class="logout-btn">
-                <i class="fas fa-sign-out-alt"></i> Logout
-            </button>
-        </div>
+   <div class="header">
+    <div class="logo">
+        <h1><i class="fas fa-cloud"></i> CloudOptima - GCP</h1>
     </div>
+    
+    <div class="nav-links">
+        <a href="/dashboard.html" class="nav-btn">← Back to Dashboard</a>
+        <a href="/azure.html" class="nav-btn">Azure</a>
+    </div>
+    
+    <div class="user-menu">
+        <div class="user-info">
+            <i class="fas fa-user-circle"></i>
+            <span id="userEmailText">Loading...</span>
+        </div>
+        <button onclick="logout()" class="logout-btn">
+            <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+    </div>
+</div>
 
     <div class="main-content">
         <!-- Stats Cards -->
