@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - CloudOptima</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+        body {
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .admin-login-box {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            width: 400px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+        .admin-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .admin-header i {
+            font-size: 50px;
+            color: #3b82f6;
+            background: #eff6ff;
+            padding: 15px;
+            border-radius: 50%;
+            margin-bottom: 15px;
+        }
+        .admin-header h2 {
+            color: #1e293b;
+        }
+        .admin-header p {
+            color: #64748b;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #334155;
+            margin-bottom: 5px;
+        }
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+        }
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn:hover {
+            background: #2563eb;
+        }
+        .back-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .back-link a {
+            color: #64748b;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        .back-link a:hover {
+            color: #3b82f6;
+        }
+        .error-msg {
+            background: #fee2e2;
+            color: #dc2626;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-login-box">
+        <div class="admin-header">
+            <i class="fas fa-shield-alt"></i>
+            <h2>Admin Access</h2>
+            <p>Enter your admin credentials</p>
+        </div>
+
+        <div id="errorMsg" class="error-msg">
+            ❌ Invalid credentials
+        </div>
+
+        <div class="form-group">
+            <label>Admin Email</label>
+            <input type="email" id="adminEmail" class="form-control" value="admin@cloudoptima.com">
+        </div>
+
+        <div class="form-group">
+            <label>Admin Password</label>
+            <input type="password" id="adminPassword" class="form-control" value="admin123">
+        </div>
+
+        <div class="form-group">
+            <label>Security Key (optional)</label>
+            <input type="text" id="securityKey" class="form-control" placeholder="Enter 2FA code">
+        </div>
+
+        <button onclick="adminLogin()" class="btn">
+            <i class="fas fa-lock"></i> Login as Admin
+        </button>
+
+        <div class="back-link">
+            <a href="index.html">← Back to Dashboard</a>
+        </div>
+    </div>
+
+    <script>
+        function adminLogin() {
+            const email = document.getElementById('adminEmail').value;
+            const password = document.getElementById('adminPassword').value;
+            
+            // Simple hardcoded admin check (change in production)
+            if(email === 'admin@cloudoptima.com' && password === 'admin123') {
+                localStorage.setItem('admin_logged_in', 'true');
+                localStorage.setItem('admin_email', email);
+                window.location.href = 'admin-dashboard.html';
+            } else {
+                document.getElementById('errorMsg').style.display = 'block';
+            }
+        }
+    </script>
+</body>
+</html>

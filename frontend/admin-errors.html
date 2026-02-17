@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error Logs - Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+        body {
+            background: #f1f5f9;
+            display: flex;
+        }
+        .sidebar {
+            width: 260px;
+            background: #0f172a;
+            color: white;
+            height: 100vh;
+            position: fixed;
+            padding: 20px 0;
+        }
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid #334155;
+        }
+        .main-content {
+            margin-left: 260px;
+            flex: 1;
+            padding: 24px;
+        }
+        .header {
+            background: white;
+            padding: 16px 24px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .error-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 4px solid #ef4444;
+        }
+        .error-time {
+            color: #64748b;
+            font-size: 13px;
+        }
+        .error-message {
+            font-weight: 600;
+            margin: 8px 0;
+            color: #dc2626;
+        }
+        .error-user {
+            background: #f1f5f9;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+        .menu-item {
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #cbd5e1;
+            text-decoration: none;
+        }
+        .menu-item.active {
+            background: #3b82f6;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h2><i class="fas fa-shield-alt"></i> Admin Panel</h2>
+        </div>
+        <a href="admin-dashboard.html" class="menu-item"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+        <a href="admin-users.html" class="menu-item"><i class="fas fa-users"></i> Users</a>
+        <a href="admin-logs.html" class="menu-item"><i class="fas fa-history"></i> Activity Logs</a>
+        <a href="admin-errors.html" class="menu-item active"><i class="fas fa-exclamation-triangle"></i> Errors</a>
+        <a href="admin-settings.html" class="menu-item"><i class="fas fa-cog"></i> Settings</a>
+        <a href="index.html" class="menu-item"><i class="fas fa-globe"></i> View Site</a>
+    </div>
+
+    <div class="main-content">
+        <div class="header">
+            <h2>⚠️ Error Logs</h2>
+            <button onclick="logout()" style="background: #ef4444; color: white; border: none; padding: 8px 20px; border-radius: 8px;">Logout</button>
+        </div>
+
+        <div class="error-card">
+            <div class="error-time">2026-02-17 10:30:45</div>
+            <div class="error-message">AWS connection failed - Invalid access key</div>
+            <div><span class="error-user">User: alice@example.com</span></div>
+        </div>
+
+        <div class="error-card">
+            <div class="error-time">2026-02-17 09:15:22</div>
+            <div class="error-message">Database connection timeout</div>
+            <div><span class="error-user">System</span></div>
+        </div>
+
+        <div class="error-card">
+            <div class="error-time">2026-02-17 08:45:10</div>
+            <div class="error-message">Brevo email API failed - Rate limit exceeded</div>
+            <div><span class="error-user">User: bob@example.com</span></div>
+        </div>
+    </div>
+
+    <script>
+        function logout() {
+            localStorage.removeItem('admin_logged_in');
+            window.location.replace('admin-login.html');
+        }
+    </script>
+</body>
+</html>

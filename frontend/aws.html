@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Azure Dashboard - CloudOptima</title>
+    <title>AWS Dashboard - CloudOptima</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* ===== THEME FROM NEW INDEX.HTML ===== */
         * {
             margin: 0;
             padding: 0;
@@ -14,31 +15,34 @@
         }
 
         body {
-            background: #f8fafc;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
         }
 
+        /* Header */
         .header {
-            background: white;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
             padding: 16px 32px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
             position: sticky;
             top: 0;
             z-index: 100;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
         }
 
         .logo h1 {
             font-size: 1.8rem;
-            background: linear-gradient(135deg, #0078d4, #005a9e);
+            background: linear-gradient(135deg, #667eea, #764ba2);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             font-weight: 700;
         }
 
         .logo i {
-            background: linear-gradient(135deg, #0078d4, #005a9e);
+            background: linear-gradient(135deg, #667eea, #764ba2);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             margin-right: 8px;
@@ -46,27 +50,27 @@
 
         .nav-links {
             display: flex;
-            gap: 20px;
+            gap: 10px;
             margin-left: auto;
-            margin-right: 30px;
+            margin-right: 20px;
         }
 
-        .nav-links a {
-            color: #4b5563;
+        .nav-btn {
+            padding: 8px 16px;
+            background: #f3f4f6;
+            color: #374151;
+            border-radius: 8px;
             text-decoration: none;
             font-weight: 500;
-            padding: 8px 16px;
-            border-radius: 8px;
             transition: all 0.2s;
         }
 
-        .nav-links a:hover {
-            background: #f3f4f6;
-            color: #0078d4;
+        .nav-btn:hover {
+            background: #e5e7eb;
         }
 
-        .nav-links a.active {
-            background: #0078d4;
+        .nav-btn.active {
+            background: #3b82f6;
             color: white;
         }
 
@@ -101,31 +105,17 @@
 
         .logout-btn:hover {
             background: #dc2626;
+            transform: translateY(-2px);
         }
 
+        /* Main Content */
         .main-content {
             max-width: 1400px;
             margin: 40px auto;
             padding: 0 24px;
         }
 
-        .welcome-banner {
-            background: linear-gradient(135deg, #0078d4 0%, #005a9e 100%);
-            color: white;
-            padding: 40px;
-            border-radius: 20px;
-            margin-bottom: 40px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 20px 30px -10px rgba(0,120,212,0.3);
-        }
-
-        .welcome-text h2 {
-            font-size: 32px;
-            margin-bottom: 10px;
-        }
-
+        /* Stats Grid */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -137,8 +127,9 @@
             background: white;
             padding: 25px;
             border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-            border: 1px solid #f0f0f0;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
         }
 
         .stat-card h3 {
@@ -156,6 +147,13 @@
             color: #1f2937;
         }
 
+        .stat-label {
+            font-size: 12px;
+            color: #10b981;
+            margin-top: 5px;
+        }
+
+        /* Two Column Layout */
         .two-column {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -167,8 +165,8 @@
             background: white;
             border-radius: 15px;
             padding: 25px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-            border: 1px solid #f0f0f0;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
         }
 
         .card-header {
@@ -194,6 +192,7 @@
             font-weight: 500;
         }
 
+        /* Form Elements */
         .form-group {
             margin-bottom: 16px;
         }
@@ -217,8 +216,8 @@
 
         .form-control:focus {
             outline: none;
-            border-color: #0078d4;
-            box-shadow: 0 0 0 3px rgba(0,120,212,0.1);
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
 
         .btn {
@@ -235,14 +234,22 @@
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #0078d4, #005a9e);
+            background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
-            width: 100%;
         }
 
         .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(0,120,212,0.3);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
         }
 
         .btn-outline {
@@ -255,26 +262,12 @@
             background: #f9fafb;
         }
 
-        .info-box {
-            background: #f0f9ff;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 15px 0;
-            font-size: 13px;
-            color: #0369a1;
-            border-left: 4px solid #0078d4;
-        }
-
-        .info-box i {
-            margin-right: 8px;
-        }
-
+        /* Table Section */
         .table-section {
             background: white;
             border-radius: 15px;
             padding: 25px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-            margin-top: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
         }
 
         .table-header {
@@ -332,12 +325,28 @@
             display: inline-block;
         }
 
+        /* Recent Alerts */
+        .recent-alerts {
+            margin-top: 20px;
+            background: #f9fafb;
+            padding: 16px;
+            border-radius: 8px;
+        }
+
+        .alert-item {
+            padding: 8px 0;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Footer */
         .footer {
             text-align: center;
             padding: 40px 20px;
-            background: white;
-            border-top: 1px solid #f0f0f0;
-            margin-top: 40px;
+            color: white;
         }
 
         .footer-links {
@@ -345,21 +354,23 @@
             justify-content: center;
             gap: 30px;
             margin-bottom: 20px;
-            flex-wrap: wrap;
         }
 
         .footer-links a {
-            color: #6b7280;
+            color: white;
             text-decoration: none;
-            font-size: 14px;
+            font-size: 0.95rem;
         }
 
         .footer-links a:hover {
-            color: #0078d4;
+            text-decoration: underline;
         }
 
         @media (max-width: 1024px) {
-            .stats-grid, .two-column {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .two-column {
                 grid-template-columns: 1fr;
             }
         }
@@ -368,14 +379,14 @@
 <body>
     <div class="header">
         <div class="logo">
-            <h1><i class="fab fa-microsoft"></i> CloudOptima - Azure</h1>
+            <h1><i class="fas fa-cloud-upload-alt"></i> CloudOptima - AWS</h1>
         </div>
         
         <div class="nav-links">
-            <a href="index.html">Home</a>
-            <a href="aws.html">AWS</a>
-            <a href="azure.html" class="active">Azure</a>
-            <a href="gcp.html">GCP</a>
+            <a href="/index.html" class="nav-btn">Home</a>
+            <a href="/aws.html" class="nav-btn active">AWS</a>
+            <a href="/azure.html" class="nav-btn">Azure</a>
+            <a href="/gcp.html" class="nav-btn">GCP</a>
         </div>
         
         <div class="user-menu">
@@ -390,17 +401,6 @@
     </div>
 
     <div class="main-content">
-        <!-- Welcome Banner -->
-        <div class="welcome-banner">
-            <div class="welcome-text">
-                <h2>Azure Cost Optimizer</h2>
-                <p>Connect your Azure account to find idle resources</p>
-            </div>
-            <div style="background: rgba(255,255,255,0.2); padding: 20px; border-radius: 15px;">
-                <i class="fas fa-info-circle"></i> Mock Data Mode
-            </div>
-        </div>
-
         <!-- Stats Cards -->
         <div class="stats-grid">
             <div class="stat-card">
@@ -414,66 +414,64 @@
             <div class="stat-card">
                 <h3><i class="fas fa-money-bill-wave"></i> Monthly Cost</h3>
                 <div class="stat-number" id="monthly-cost">$0</div>
+                <div class="stat-label" id="cost-source">(Demo Data)</div>
             </div>
             <div class="stat-card">
-                <h3><i class="fas fa-tag"></i> Potential Savings</h3>
-                <div class="stat-number" id="potential-savings">$0</div>
+                <h3><i class="fas fa-bell"></i> Alerts Sent</h3>
+                <div class="stat-number" id="alertsSent">0</div>
             </div>
         </div>
 
-        <!-- Two Column: Connection + Alerts -->
+        <!-- Two Column Cards -->
         <div class="two-column">
-            <!-- Azure Connection Card (4 Fields) -->
+            <!-- AWS Connect Card (FROM YOUR INDEX.HTML) -->
             <div class="card">
                 <div class="card-header">
-                    <h2><i class="fab fa-microsoft" style="color: #0078d4;"></i> Azure Connection</h2>
-                    <span id="azureStatus" class="status-badge" style="background: #f97316; color: white;">Not Connected</span>
+                    <h2><i class="fab fa-aws" style="color: #3b82f6;"></i> AWS Connection</h2>
+                    <span id="awsStatus" class="status-badge" style="background: #f97316; color: white;">Not Connected</span>
                 </div>
                 
-                <div id="azureForm">
-                    <div class="info-box">
-                        <i class="fas fa-info-circle"></i> 
-                        <strong>How to get these:</strong> Azure Portal → App Registrations → New App
-                    </div>
-                    
+                <div id="awsForm">
                     <div class="form-group">
-                        <label>Client ID (App ID)</label>
-                        <input type="text" id="azure-client-id" class="form-control" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
+                        <label>AWS Access Key ID</label>
+                        <input type="text" id="aws-key" class="form-control" placeholder="AKIA...">
                     </div>
                     <div class="form-group">
-                        <label>Client Secret</label>
-                        <input type="password" id="azure-client-secret" class="form-control" placeholder="••••••••">
+                        <label>AWS Secret Access Key</label>
+                        <input type="password" id="aws-secret" class="form-control" placeholder="••••••">
                     </div>
                     <div class="form-group">
-                        <label>Tenant ID</label>
-                        <input type="text" id="azure-tenant-id" class="form-control" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
+                        <label>Region</label>
+                        <select id="aws-region" class="form-control">
+                            <option value="us-east-1">US East (N. Virginia)</option>
+                            <option value="us-west-2">US West (Oregon)</option>
+                            <option value="eu-west-1">EU (Ireland)</option>
+                        </select>
                     </div>
-                    <div class="form-group">
-                        <label>Subscription ID</label>
-                        <input type="text" id="azure-subscription-id" class="form-control" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
-                    </div>
-                    <button onclick="connectAzure()" class="btn btn-primary">
-                        <i class="fas fa-plug"></i> Connect Azure (Mock)
+                    <button onclick="connectAWS()" class="btn btn-primary" style="width: 100%;">
+                        <i class="fas fa-plug"></i> Connect AWS
                     </button>
                 </div>
                 
                 <div id="connectedInfo" style="display: none;">
                     <div style="background: #f0fdf4; padding: 16px; border-radius: 8px;">
                         <p style="color: #059669; margin-bottom: 8px;">
-                            <i class="fas fa-check-circle"></i> Azure Connected (Mock Mode)
+                            <i class="fas fa-check-circle"></i> AWS Connected Successfully
                         </p>
-                        <p style="font-size: 13px; margin-bottom: 4px;">Subscription: <span id="connectedAccount">***</span></p>
-                        <button onclick="disconnectAzure()" class="btn btn-outline" style="width: 100%;">
+                        <p style="font-size: 13px; margin-bottom: 4px;">Account: <span id="connectedAccount">***</span></p>
+                        <p style="font-size: 13px; margin-bottom: 12px;">Region: <span id="connectedRegion">us-east-1</span></p>
+                        <button onclick="disconnectAWS()" class="btn btn-outline" style="width: 100%;">
                             <i class="fas fa-unlink"></i> Disconnect
                         </button>
                     </div>
                 </div>
             </div>
 
-            <!-- Auto-Alert Settings -->
+            <!-- Auto-Alert Settings Card (FROM YOUR INDEX.HTML) -->
             <div class="card">
                 <div class="card-header">
-                    <h2><i class="fas fa-bell" style="color: #0078d4;"></i> Alert Settings</h2>
+                    <h2><i class="fas fa-bell" style="color: #3b82f6;"></i> Auto-Alert Settings</h2>
+                    <span id="alertStatus" class="status-badge" style="background: #10b981; color: white;">ACTIVE</span>
                 </div>
                 
                 <div class="form-group">
@@ -490,33 +488,58 @@
                     </select>
                 </div>
                 
-                <button onclick="saveSettings()" class="btn btn-primary" style="margin-top: 10px;">
-                    <i class="fas fa-save"></i> Save Settings
-                </button>
+                <div style="margin-bottom: 16px;">
+                    <label style="display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" id="autoAlertToggle" checked>
+                        <span>Enable Auto-Alerts</span>
+                    </label>
+                </div>
+                
+                <div style="display: flex; gap: 12px;">
+                    <button onclick="saveAlertSettings()" class="btn btn-primary" style="flex: 1;">
+                        <i class="fas fa-save"></i> Save
+                    </button>
+                    <button onclick="testAlert()" class="btn btn-success" style="flex: 1;">
+                        <i class="fas fa-paper-plane"></i> Test Alert
+                    </button>
+                </div>
+                
+                <div class="recent-alerts">
+                    <p style="font-weight: 600; margin-bottom: 8px;">Recent Alerts</p>
+                    <div id="recentAlerts">
+                        <div class="alert-item">
+                            <i class="fas fa-check-circle"></i> No recent alerts
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
         <!-- Resources Table -->
         <div class="table-section">
             <div class="table-header">
-                <h2><i class="fas fa-list"></i> Azure Resources (Mock Data)</h2>
+                <h2><i class="fas fa-list"></i> AWS Resources</h2>
             </div>
             
             <div class="table-wrapper">
                 <table>
                     <thead>
                         <tr>
-                            <th>Resource ID</th>
+                            <th>Instance ID</th>
                             <th>Name</th>
                             <th>Type</th>
-                            <th>Region</th>
-                            <th>Status</th>
+                            <th>State</th>
+                            <th>Running Days</th>
                             <th>Monthly Cost</th>
                             <th>Action</th>
                         </tr>
                     </thead>
                     <tbody id="resources-body">
-                        <!-- Filled by JavaScript -->
+                        <tr>
+                            <td colspan="7" style="text-align: center; padding: 40px;">
+                                <i class="fas fa-spinner fa-spin"></i> Loading resources...
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -525,108 +548,44 @@
 
     <div class="footer">
         <div class="footer-links">
-            <a href="about.html">About</a>
-            <a href="faq.html">FAQ</a>
-            <a href="feedback.html">Feedback</a>
-            <a href="admin-login.html" style="opacity: 0.4;">Admin</a>
+            <a href="/about.html">About</a>
+            <a href="/faq.html">FAQ</a>
+            <a href="/feedback.html">Feedback</a>
+            <a href="/admin-login.html" style="opacity: 0.5;">Admin</a>
         </div>
-        <div>© 2026 CloudOptima · Free for students</div>
+        <p>© 2026 CloudOptima · Open Source · Free Forever</p>
     </div>
 
     <script>
-        // Auth check
-        (function() {
-            const token = localStorage.getItem('token');
-            if (!token) window.location.replace('login.html');
-            try {
-                const user = JSON.parse(localStorage.getItem('user') || '{}');
-                document.getElementById('userEmailText').textContent = user.email || 'User';
-            } catch (e) {}
-        })();
-
-        function logout() {
-            localStorage.clear();
-            window.location.replace('login.html');
+    // ===== COPY ALL YOUR AWS JAVASCRIPT FROM INDEX.HTML HERE =====
+    // (Everything from your index.html script section)
+    
+    // Auth check
+    (function() {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.replace('/login.html');
+            return;
         }
+        try {
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            document.getElementById('userEmailText').textContent = user.email || 'User';
+        } catch (e) {}
+    })();
 
-        // Azure Mock Data
-        const azureInstances = [
-            { id: 'vm-prod-web-01', name: 'Prod Web', type: 'D2s v3', region: 'East US', status: 'running', cost: 145.50 },
-            { id: 'vm-prod-db-01', name: 'Prod DB', type: 'D4s v3', region: 'East US', status: 'running', cost: 280.75 },
-            { id: 'vm-dev-api-01', name: 'Dev API', type: 'B2s', region: 'West Europe', status: 'idle', cost: 65.25 },
-            { id: 'vm-test-utility', name: 'Test VM', type: 'B1s', region: 'West Europe', status: 'idle', cost: 45.00 },
-            { id: 'vm-staging-web', name: 'Staging', type: 'D2s v3', region: 'Southeast Asia', status: 'running', cost: 95.30 },
-            { id: 'vm-backup-01', name: 'Backup', type: 'B2s', region: 'East US', status: 'idle', cost: 55.40 },
-            { id: 'vm-prod-cache', name: 'Redis', type: 'C4', region: 'East US', status: 'running', cost: 120.25 },
-            { id: 'vm-dev-db-01', name: 'Dev DB', type: 'D2s v3', region: 'West Europe', status: 'idle', cost: 75.80 }
-        ];
+    function logout() {
+        localStorage.clear();
+        window.location.replace('/login.html');
+    }
 
-        function connectAzure() {
-            const clientId = document.getElementById('azure-client-id')?.value;
-            const clientSecret = document.getElementById('azure-client-secret')?.value;
-            const tenantId = document.getElementById('azure-tenant-id')?.value;
-            const subId = document.getElementById('azure-subscription-id')?.value;
-            
-            if (!clientId || !clientSecret || !tenantId || !subId) {
-                alert('Please fill all Azure credential fields');
-                return;
-            }
-
-            document.getElementById('azureForm').style.display = 'none';
-            document.getElementById('connectedInfo').style.display = 'block';
-            document.getElementById('azureStatus').innerHTML = 'Connected (Mock)';
-            document.getElementById('azureStatus').style.background = '#10b981';
-            document.getElementById('connectedAccount').textContent = subId.substring(0, 8) + '...';
-            
-            loadAzureData();
-        }
-
-        function disconnectAzure() {
-            document.getElementById('azureForm').style.display = 'block';
-            document.getElementById('connectedInfo').style.display = 'none';
-            document.getElementById('azureStatus').innerHTML = 'Not Connected';
-            document.getElementById('azureStatus').style.background = '#f97316';
-        }
-
-        function loadAzureData() {
-            const tbody = document.getElementById('resources-body');
-            tbody.innerHTML = '';
-            
-            let totalCost = 0;
-            let idleCount = 0;
-            
-            azureInstances.forEach(inst => {
-                totalCost += inst.cost;
-                if (inst.status === 'idle') idleCount++;
-                
-                const row = tbody.insertRow();
-                row.innerHTML = `
-                    <td>${inst.id}</td>
-                    <td>${inst.name}</td>
-                    <td>${inst.type}</td>
-                    <td>${inst.region}</td>
-                    <td><span class="status-${inst.status}">${inst.status.toUpperCase()}</span></td>
-                    <td>$${inst.cost}/mo</td>
-                    <td>
-                        ${inst.status === 'idle' ? 
-                            '<button class="btn btn-outline" style="padding: 4px 12px;" onclick="alert(\'Alert sent\')">🔔 Alert</button>' : 
-                            '<span style="color: #9ca3af;">Active</span>'}
-                    </td>
-                `;
-            });
-            
-            document.getElementById('total-resources').textContent = azureInstances.length;
-            document.getElementById('idle-resources').textContent = idleCount;
-            document.getElementById('monthly-cost').textContent = '$' + totalCost.toFixed(2);
-            document.getElementById('potential-savings').textContent = '$' + (idleCount * 65).toFixed(0);
-        }
-
-        function saveSettings() {
-            alert('Settings saved (mock)');
-        }
-
-        // Load on page load
-        loadAzureData();
+    // ===== PASTE ALL YOUR AWS FUNCTIONS HERE =====
+    // connectAWS(), loadAWSInstances(), disconnectAWS(), 
+    // saveAlertSettings(), testAlert(), etc.
+    
+    // Make sure to add localStorage saves after connection:
+    // localStorage.setItem('aws_monthly_cost', data.total_cost);
+    // localStorage.setItem('aws_total_resources', data.total_instances);
+    // localStorage.setItem('aws_idle_resources', data.idle_instances?.length);
     </script>
 </body>
 </html>

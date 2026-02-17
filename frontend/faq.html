@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FAQ - CloudOptima</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+        body {
+            background: #f8fafc;
+        }
+        .header {
+            background: white;
+            padding: 16px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .logo h1 {
+            font-size: 1.8rem;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .nav-links {
+            display: flex;
+            gap: 20px;
+            margin-left: auto;
+            margin-right: 30px;
+        }
+        .nav-links a {
+            color: #4b5563;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+        }
+        .nav-links a:hover {
+            background: #f3f4f6;
+        }
+        .nav-links a.active {
+            background: #3b82f6;
+            color: white;
+        }
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 20px;
+            background: #f3f4f6;
+            border-radius: 40px;
+        }
+        .logout-btn {
+            padding: 8px 20px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 40px;
+            cursor: pointer;
+        }
+        .main-content {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 0 24px;
+        }
+        .page-title {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .page-title h2 {
+            font-size: 32px;
+            color: #1f2937;
+        }
+        .faq-section {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.03);
+        }
+        .faq-item {
+            border-bottom: 1px solid #e5e7eb;
+            padding: 20px 0;
+        }
+        .faq-item:last-child {
+            border-bottom: none;
+        }
+        .faq-question {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        .faq-question i {
+            color: #3b82f6;
+            transition: transform 0.3s;
+        }
+        .faq-answer {
+            margin-top: 15px;
+            color: #6b7280;
+            line-height: 1.6;
+            display: none;
+        }
+        .faq-answer.show {
+            display: block;
+        }
+        .footer {
+            text-align: center;
+            padding: 40px;
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">
+            <h1><i class="fas fa-cloud-upload-alt"></i> CloudOptima</h1>
+        </div>
+        <div class="nav-links">
+            <a href="index.html">Dashboard</a>
+            <a href="idle-resources.html">Idle</a>
+            <a href="settings.html">Settings</a>
+            <a href="about.html">About</a>
+            <a href="faq.html" class="active">FAQ</a>
+        </div>
+        <div class="user-menu">
+            <div class="user-info">
+                <i class="fas fa-user-circle"></i>
+                <span>student@example.com</span>
+            </div>
+            <button onclick="logout()" class="logout-btn">Logout</button>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="page-title">
+            <h2>Frequently Asked Questions</h2>
+        </div>
+
+        <div class="faq-section">
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    <span>Is CloudOptima really free?</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    Yes! CloudOptima is completely free and open-source. No hidden costs, no credit card required.
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    <span>Which clouds are supported?</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    AWS (real data), Azure (mock), and GCP (mock). You can connect your real AWS account to see actual resources.
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    <span>Is my cloud key secure?</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    Yes. Keys are stored locally and sent directly to AWS API. We never store your secrets.
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    <span>What are idle resources?</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    Resources running but not being used (low CPU, no traffic). They waste money.
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    <span>Can I use this for my college project?</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    Absolutely! CloudOptima was built for students. The code is on GitHub.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>© 2026 CloudOptima · Still have questions? Email us</p>
+    </div>
+
+    <script>
+        function logout() {
+            localStorage.clear();
+            window.location.replace('login.html');
+        }
+
+        function toggleFAQ(element) {
+            const answer = element.nextElementSibling;
+            const icon = element.querySelector('i');
+            
+            answer.classList.toggle('show');
+            icon.style.transform = answer.classList.contains('show') ? 'rotate(180deg)' : 'rotate(0)';
+        }
+    </script>
+</body>
+</html>

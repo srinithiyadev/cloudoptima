@@ -3,9 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
     <title>GCP Dashboard - CloudOptima</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -13,35 +10,64 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
         }
 
         body {
-            background: #f3f4f6;
-            min-height: 100vh;
+            background: #f8fafc;
         }
 
-        /* Header */
         .header {
             background: white;
-            padding: 16px 24px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 16px 32px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
             position: sticky;
             top: 0;
             z-index: 100;
         }
 
         .logo h1 {
-            font-size: 1.5rem;
-            color: #111827;
+            font-size: 1.8rem;
+            background: linear-gradient(135deg, #4285f4, #34a853);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 700;
         }
 
         .logo i {
-            color: #3b82f6;
+            background: linear-gradient(135deg, #4285f4, #34a853);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
             margin-right: 8px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 20px;
+            margin-left: auto;
+            margin-right: 30px;
+        }
+
+        .nav-links a {
+            color: #4b5563;
+            text-decoration: none;
+            font-weight: 500;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .nav-links a:hover {
+            background: #f3f4f6;
+            color: #4285f4;
+        }
+
+        .nav-links a.active {
+            background: #4285f4;
+            color: white;
         }
 
         .user-menu {
@@ -54,84 +80,89 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            padding: 8px 16px;
+            padding: 8px 20px;
             background: #f3f4f6;
             border-radius: 40px;
             font-size: 14px;
+            font-weight: 500;
         }
 
         .logout-btn {
-            padding: 8px 16px;
+            padding: 8px 20px;
             background: #ef4444;
             color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 40px;
             cursor: pointer;
             font-size: 14px;
-            transition: background 0.2s;
+            font-weight: 500;
+            transition: all 0.3s;
         }
 
         .logout-btn:hover {
             background: #dc2626;
         }
 
-        /* Main Content */
         .main-content {
             max-width: 1400px;
-            margin: 0 auto;
-            padding: 24px;
+            margin: 40px auto;
+            padding: 0 24px;
         }
 
-        /* Stats Grid */
+        .welcome-banner {
+            background: linear-gradient(135deg, #4285f4 0%, #34a853 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 20px;
+            margin-bottom: 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 20px 30px -10px rgba(66,133,244,0.3);
+        }
+
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 20px;
-            margin-bottom: 24px;
+            margin-bottom: 30px;
         }
 
         .stat-card {
             background: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
             border: 1px solid #f0f0f0;
         }
 
         .stat-card h3 {
             font-size: 14px;
             color: #6b7280;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
             display: flex;
             align-items: center;
             gap: 6px;
         }
 
         .stat-number {
-            font-size: 28px;
-            font-weight: 600;
-            color: #111827;
+            font-size: 32px;
+            font-weight: 700;
+            color: #1f2937;
         }
 
-        .stat-label {
-            font-size: 12px;
-            color: #10b981;
-            margin-top: 4px;
-        }
-
-        /* Two Column Layout */
         .two-column {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 24px;
-            margin-bottom: 24px;
+            margin-bottom: 30px;
         }
 
         .card {
             background: white;
-            border-radius: 12px;
-            padding: 24px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
             border: 1px solid #f0f0f0;
         }
 
@@ -145,7 +176,7 @@
         .card-header h2 {
             font-size: 18px;
             font-weight: 600;
-            color: #111827;
+            color: #1f2937;
             display: flex;
             align-items: center;
             gap: 8px;
@@ -158,7 +189,6 @@
             font-weight: 500;
         }
 
-        /* Form Elements */
         .form-group {
             margin-bottom: 16px;
         }
@@ -173,95 +203,73 @@
 
         .form-control {
             width: 100%;
-            padding: 10px 12px;
-            border: 1px solid #e5e7eb;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
             border-radius: 8px;
             font-size: 14px;
-            transition: border-color 0.2s;
+            transition: all 0.2s;
         }
 
         .form-control:focus {
             outline: none;
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+            border-color: #4285f4;
+            box-shadow: 0 0 0 3px rgba(66,133,244,0.1);
+        }
+
+        .file-input {
+            border: 2px dashed #e5e7eb;
+            padding: 20px;
+            text-align: center;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .file-input:hover {
+            border-color: #4285f4;
+            background: #f0f7ff;
         }
 
         .btn {
-            padding: 10px 20px;
+            padding: 12px 24px;
             border: none;
             border-radius: 8px;
             font-size: 14px;
-            font-weight: 500;
+            font-weight: 600;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            transition: all 0.2s;
+            transition: all 0.3s;
         }
 
         .btn-primary {
-            background: #3b82f6;
+            background: linear-gradient(135deg, #4285f4, #34a853);
             color: white;
+            width: 100%;
         }
 
         .btn-primary:hover {
-            background: #2563eb;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(66,133,244,0.3);
         }
 
-        .btn-success {
-            background: #10b981;
-            color: white;
+        .info-box {
+            background: #f0f7ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-size: 13px;
+            color: #1e3a8a;
+            border-left: 4px solid #4285f4;
         }
 
-        .btn-success:hover {
-            background: #059669;
-        }
-
-        .btn-outline {
-            background: white;
-            border: 1px solid #e5e7eb;
-            color: #374151;
-        }
-
-        .btn-outline:hover {
-            background: #f9fafb;
-        }
-
-        /* Table Section */
         .table-section {
             background: white;
-            border-radius: 12px;
-            padding: 24px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            border: 1px solid #f0f0f0;
-        }
-
-        .table-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .cloud-tabs {
-            display: flex;
-            gap: 8px;
-        }
-
-        .tab-btn {
-            padding: 8px 16px;
-            border: 1px solid #e5e7eb;
-            background: white;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: all 0.2s;
-        }
-
-        .tab-btn.active {
-            background: #3b82f6;
-            color: white;
-            border-color: #3b82f6;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            margin-top: 30px;
         }
 
         .table-wrapper {
@@ -278,22 +286,18 @@
 
         th {
             background: #f9fafb;
-            padding: 12px;
+            padding: 15px;
             text-align: left;
             font-size: 12px;
             font-weight: 600;
             color: #6b7280;
-            border-bottom: 1px solid #e5e7eb;
+            border-bottom: 2px solid #e5e7eb;
         }
 
         td {
-            padding: 12px;
+            padding: 15px;
             border-bottom: 1px solid #e5e7eb;
             font-size: 13px;
-        }
-
-        tr:last-child td {
-            border-bottom: none;
         }
 
         .status-running {
@@ -316,106 +320,75 @@
             display: inline-block;
         }
 
-        .cloud-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
+        .footer {
+            text-align: center;
+            padding: 40px 20px;
+            background: white;
+            border-top: 1px solid #f0f0f0;
+            margin-top: 40px;
         }
 
-        /* Recent Alerts */
-        .recent-alerts {
-            margin-top: 20px;
-            background: #f9fafb;
-            padding: 16px;
-            border-radius: 8px;
-        }
-
-        .alert-item {
-            padding: 8px 0;
-            border-bottom: 1px solid #e5e7eb;
-            font-size: 13px;
+        .footer-links {
             display: flex;
-            align-items: center;
-            gap: 8px;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
         }
 
-        .alert-item:last-child {
-            border-bottom: none;
+        .footer-links a {
+            color: #6b7280;
+            text-decoration: none;
+            font-size: 14px;
         }
 
-        .alert-item i {
-            color: #10b981;
+        .footer-links a:hover {
+            color: #4285f4;
         }
 
-        /* Responsive */
         @media (max-width: 1024px) {
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            .two-column {
+            .stats-grid, .two-column {
                 grid-template-columns: 1fr;
             }
         }
-
-        @media (max-width: 640px) {
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-            .header {
-                flex-direction: column;
-                gap: 12px;
-            }
-        }
-        .nav-links {
-    display: flex;
-    gap: 10px;
-    margin-right: 20px;
-}
-
-.nav-btn {
-    padding: 10px 20px;
-    background: rgba(255, 255, 255, 0.2);
-    color: white;
-    border-radius: 8px;
-    text-decoration: none;
-    font-size: 14px;
-    font-weight: 500;
-    transition: all 0.3s;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-}
-
-.nav-btn:hover {
-    background: rgba(255, 255, 255, 0.3);
-    transform: translateY(-2px);
-}
     </style>
 </head>
 <body>
-   <div class="header">
-    <div class="logo">
-        <h1><i class="fas fa-cloud"></i> CloudOptima - GCP</h1>
-    </div>
-    
-    <div style="display: flex; gap: 10px; margin-left: auto; margin-right: 20px;">
-        <a href="/index.html" style="padding: 8px 16px; background: #f3f4f6; color: #374151; border-radius: 8px; text-decoration: none; font-weight: 500;">← Back</a>
-        <a href="/azure.html" style="padding: 8px 16px; background: #f3f4f6; color: #374151; border-radius: 8px; text-decoration: none; font-weight: 500;">Azure</a>
-    </div>
-    
-    <div class="user-menu">
-        <div class="user-info">
-            <i class="fas fa-user-circle"></i>
-            <span id="userEmailText">Loading...</span>
+    <div class="header">
+        <div class="logo">
+            <h1><i class="fab fa-google"></i> CloudOptima - GCP</h1>
         </div>
-        <button onclick="logout()" class="logout-btn">
-            <i class="fas fa-sign-out-alt"></i> Logout
-        </button>
+        
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="aws.html">AWS</a>
+            <a href="azure.html">Azure</a>
+            <a href="gcp.html" class="active">GCP</a>
+        </div>
+        
+        <div class="user-menu">
+            <div class="user-info">
+                <i class="fas fa-user-circle"></i>
+                <span id="userEmailText">Loading...</span>
+            </div>
+            <button onclick="logout()" class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </div>
     </div>
-</div>
 
     <div class="main-content">
+        <!-- Welcome Banner -->
+        <div class="welcome-banner">
+            <div class="welcome-text">
+                <h2>GCP Cost Optimizer</h2>
+                <p>Upload your service account JSON to find idle resources</p>
+            </div>
+            <div style="background: rgba(255,255,255,0.2); padding: 20px; border-radius: 15px;">
+                <i class="fas fa-info-circle"></i> Mock Data Mode
+            </div>
+        </div>
+
         <!-- Stats Cards -->
         <div class="stats-grid">
             <div class="stat-card">
@@ -429,17 +402,16 @@
             <div class="stat-card">
                 <h3><i class="fas fa-money-bill-wave"></i> Monthly Cost</h3>
                 <div class="stat-number" id="monthly-cost">$0</div>
-                <div class="stat-label" id="cost-source">(Demo Data)</div>
             </div>
             <div class="stat-card">
-                <h3><i class="fas fa-bell"></i> Alerts Sent</h3>
-                <div class="stat-number" id="alertsSent">0</div>
+                <h3><i class="fas fa-tag"></i> Potential Savings</h3>
+                <div class="stat-number" id="potential-savings">$0</div>
             </div>
         </div>
 
-        <!-- Two Column Cards -->
+        <!-- Two Column: Connection + Alerts -->
         <div class="two-column">
-            <!-- GCP Connection Card -->
+            <!-- GCP Connection Card (JSON Upload) -->
             <div class="card">
                 <div class="card-header">
                     <h2><i class="fab fa-google" style="color: #4285f4;"></i> GCP Connection</h2>
@@ -447,24 +419,34 @@
                 </div>
                 
                 <div id="gcpForm">
+                    <div class="info-box">
+                        <i class="fas fa-info-circle"></i> 
+                        <strong>How to get:</strong> GCP Console → IAM → Service Accounts → Create Key (JSON)
+                    </div>
+                    
                     <div class="form-group">
                         <label>Service Account JSON Key</label>
-                        <input type="file" id="gcp-key-file" class="form-control" accept=".json">
-                        <small style="color: #6b7280; display: block; margin-top: 4px;">Download from GCP Console → IAM → Service Accounts</small>
+                        <div class="file-input" onclick="document.getElementById('jsonFile').click()">
+                            <i class="fas fa-cloud-upload-alt" style="font-size: 24px; color: #4285f4; margin-bottom: 10px;"></i>
+                            <p id="fileName">Click to select JSON file</p>
+                            <input type="file" id="jsonFile" accept=".json" style="display: none;" onchange="updateFileName(this)">
+                        </div>
                     </div>
+                    
                     <div class="form-group">
-                        <label>Project ID</label>
+                        <label>Project ID (from JSON)</label>
                         <input type="text" id="gcp-project-id" class="form-control" placeholder="my-project-123">
                     </div>
-                    <button onclick="connectGCP()" class="btn btn-primary" style="width: 100%;">
-                        <i class="fas fa-plug"></i> Connect GCP
+                    
+                    <button onclick="connectGCP()" class="btn btn-primary">
+                        <i class="fas fa-plug"></i> Connect GCP (Mock)
                     </button>
                 </div>
                 
                 <div id="connectedInfo" style="display: none;">
                     <div style="background: #f0fdf4; padding: 16px; border-radius: 8px;">
                         <p style="color: #059669; margin-bottom: 8px;">
-                            <i class="fas fa-check-circle"></i> GCP Connected Successfully
+                            <i class="fas fa-check-circle"></i> GCP Connected (Mock Mode)
                         </p>
                         <p style="font-size: 13px; margin-bottom: 4px;">Project: <span id="connectedAccount">***</span></p>
                         <button onclick="disconnectGCP()" class="btn btn-outline" style="width: 100%;">
@@ -474,11 +456,10 @@
                 </div>
             </div>
 
-            <!-- Auto-Alert Settings Card (Keep exactly as is) -->
+            <!-- Auto-Alert Settings -->
             <div class="card">
                 <div class="card-header">
-                    <h2><i class="fas fa-bell" style="color: #3b82f6;"></i> Auto-Alert Settings</h2>
-                    <span id="alertStatus" class="status-badge" style="background: #10b981; color: white;">ACTIVE</span>
+                    <h2><i class="fas fa-bell" style="color: #4285f4;"></i> Alert Settings</h2>
                 </div>
                 
                 <div class="form-group">
@@ -495,312 +476,145 @@
                     </select>
                 </div>
                 
-                <div style="margin-bottom: 16px;">
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                        <input type="checkbox" id="autoAlertToggle" checked>
-                        <span>Enable Auto-Alerts</span>
-                    </label>
-                </div>
-                
-                <div style="display: flex; gap: 12px;">
-                    <button onclick="saveAlertSettings()" class="btn btn-primary" style="flex: 1;">
-                        <i class="fas fa-save"></i> Save
-                    </button>
-                    <button onclick="testAlert()" class="btn btn-success" style="flex: 1;">
-                        <i class="fas fa-paper-plane"></i> Test Alert
-                    </button>
-                </div>
-                
-                <div class="recent-alerts">
-                    <p style="font-weight: 600; margin-bottom: 8px;">Recent Alerts</p>
-                    <div id="recentAlerts">
-                        <div class="alert-item">
-                            <i class="fas fa-check-circle"></i> No recent alerts
-                        </div>
-                    </div>
-                </div>
+                <button onclick="saveSettings()" class="btn btn-primary" style="margin-top: 10px;">
+                    <i class="fas fa-save"></i> Save Settings
+                </button>
             </div>
         </div>
 
         <!-- Resources Table -->
         <div class="table-section">
             <div class="table-header">
-                <h2><i class="fas fa-list"></i> GCP Resources</h2>
-                <div class="cloud-tabs">
-                    <button class="tab-btn active" onclick="showCloud('gcp')"><i class="fab fa-google"></i> GCP</button>
-                </div>
+                <h2><i class="fas fa-list"></i> GCP Resources (Mock Data)</h2>
             </div>
             
             <div class="table-wrapper">
                 <table>
                     <thead>
                         <tr>
-                            <th>Resource ID</th>
+                            <th>Instance ID</th>
                             <th>Name</th>
-                            <th>Cloud</th>
+                            <th>Type</th>
+                            <th>Zone</th>
                             <th>Status</th>
-                            <th>Running Days</th>
                             <th>Monthly Cost</th>
                             <th>Action</th>
                         </tr>
                     </thead>
                     <tbody id="resources-body">
-                        <tr>
-                            <td colspan="7" style="text-align: center; padding: 40px;">
-                                <i class="fas fa-spinner fa-spin"></i> Loading resources...
-                            </td>
-                        </tr>
+                        <!-- Filled by JavaScript -->
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
 
+    <div class="footer">
+        <div class="footer-links">
+            <a href="about.html">About</a>
+            <a href="faq.html">FAQ</a>
+            <a href="feedback.html">Feedback</a>
+            <a href="admin-login.html" style="opacity: 0.4;">Admin</a>
+        </div>
+        <div>© 2026 CloudOptima · Free for students</div>
+    </div>
+
     <script>
-    // ===== SIMPLE AUTH CHECK =====
-    (function() {
-        const token = localStorage.getItem('token');
-        if (!token) {
-            window.location.replace('/login.html');
-            return;
+        // Auth check
+        (function() {
+            const token = localStorage.getItem('token');
+            if (!token) window.location.replace('login.html');
+            try {
+                const user = JSON.parse(localStorage.getItem('user') || '{}');
+                document.getElementById('userEmailText').textContent = user.email || 'User';
+            } catch (e) {}
+        })();
+
+        function logout() {
+            localStorage.clear();
+            window.location.replace('login.html');
         }
 
-        // Display user email
-        try {
-            const user = JSON.parse(localStorage.getItem('user') || '{}');
-            const emailSpan = document.getElementById('userEmailText');
-            if (emailSpan) emailSpan.textContent = user.email || 'User';
-        } catch (e) {
-            console.error('Error parsing user data');
-        }
-    })();
-
-    // ===== LOGOUT =====
-    function logout() {
-        localStorage.clear();
-        window.location.replace('/login.html');
-    }
-
-    // ===== GCP MOCK DATA =====
-    const gcpMockInstances = [
-        { id: 'gcp-prod-web-01', name: 'Production Web Server', cloud: 'gcp', status: 'running', days: 60, cost: 165.30 },
-        { id: 'gcp-pro-db-01', name: 'Production Database', cloud: 'gcp', status: 'running', days: 180, cost: 320.45 },
-        { id: 'gcp-dev-api-01', name: 'Dev API Server', cloud: 'gcp', status: 'idle', days: 25, cost: 75.20 },
-        { id: 'gcp-test-runner', name: 'Test Runner', cloud: 'gcp', status: 'idle', days: 45, cost: 55.80 },
-        { id: 'gcp-staging-web', name: 'Staging Web', cloud: 'gcp', status: 'running', days: 20, cost: 110.50 },
-        { id: 'gcp-backup-01', name: 'Backup Server', cloud: 'gcp', status: 'idle', days: 150, cost: 65.25 },
-        { id: 'gcp-kubernetes-01', name: 'K8s Cluster Node', cloud: 'gcp', status: 'running', days: 90, cost: 210.75 },
-        { id: 'gcp-dataflow-01', name: 'Dataflow Job', cloud: 'gcp', status: 'idle', days: 35, cost: 85.90 }
-    ];
-
-    function connectGCP() {
-        const fileInput = document.getElementById('gcp-key-file');
-        const projectId = document.getElementById('gcp-project-id')?.value.trim();
-        
-        if (!fileInput.files || fileInput.files.length === 0) {
-            alert('Please select a JSON key file');
-            return;
-        }
-        
-        if (!projectId) {
-            alert('Please enter Project ID');
-            return;
+        function updateFileName(input) {
+            document.getElementById('fileName').textContent = input.files[0]?.name || 'No file selected';
         }
 
-        // Show connected state
-        document.getElementById('gcpForm').style.display = 'none';
-        document.getElementById('connectedInfo').style.display = 'block';
-        document.getElementById('gcpStatus').innerHTML = 'Connected';
-        document.getElementById('gcpStatus').style.background = '#10b981';
-        document.getElementById('connectedAccount').textContent = projectId;
-        document.getElementById('cost-source').innerText = '(GCP Mock Data)';
-        
-        // Load GCP mock data
-        loadGCPData();
-        
-        alert('✅ GCP connected successfully! (Mock Data)');
-    }
+        // GCP Mock Data
+        const gcpInstances = [
+            { id: 'gcp-prod-web-01', name: 'Prod Web', type: 'n2-standard-2', zone: 'us-central1-a', status: 'running', cost: 165.30 },
+            { id: 'gcp-prod-db-01', name: 'Prod DB', type: 'n2-standard-8', zone: 'us-central1-a', status: 'running', cost: 320.45 },
+            { id: 'gcp-dev-api-01', name: 'Dev API', type: 'e2-medium', zone: 'us-west1-b', status: 'idle', cost: 75.20 },
+            { id: 'gcp-test-runner', name: 'Test Runner', type: 'e2-small', zone: 'us-west1-b', status: 'idle', cost: 55.80 },
+            { id: 'gcp-staging-web', name: 'Staging', type: 'n2-standard-2', zone: 'europe-west1-c', status: 'running', cost: 110.50 },
+            { id: 'gcp-backup-01', name: 'Backup', type: 'e2-medium', zone: 'us-central1-a', status: 'idle', cost: 65.25 },
+            { id: 'gcp-kubernetes-01', name: 'K8s Node', type: 'n2-standard-4', zone: 'us-central1-a', status: 'running', cost: 210.75 },
+            { id: 'gcp-dataflow-01', name: 'Dataflow', type: 'custom', zone: 'us-east1-b', status: 'idle', cost: 85.90 }
+        ];
 
-    function disconnectGCP() {
-        if (confirm('Disconnect GCP account?')) {
+        function connectGCP() {
+            const file = document.getElementById('jsonFile').files[0];
+            const projectId = document.getElementById('gcp-project-id').value;
+            
+            if (!file || !projectId) {
+                alert('Please select JSON file and enter Project ID');
+                return;
+            }
+
+            document.getElementById('gcpForm').style.display = 'none';
+            document.getElementById('connectedInfo').style.display = 'block';
+            document.getElementById('gcpStatus').innerHTML = 'Connected (Mock)';
+            document.getElementById('gcpStatus').style.background = '#10b981';
+            document.getElementById('connectedAccount').textContent = projectId;
+            
+            loadGCPData();
+        }
+
+        function disconnectGCP() {
             document.getElementById('gcpForm').style.display = 'block';
             document.getElementById('connectedInfo').style.display = 'none';
             document.getElementById('gcpStatus').innerHTML = 'Not Connected';
             document.getElementById('gcpStatus').style.background = '#f97316';
-            document.getElementById('cost-source').innerText = '(Demo Data)';
+        }
+
+        function loadGCPData() {
+            const tbody = document.getElementById('resources-body');
+            tbody.innerHTML = '';
             
-            loadDemoData();
-            alert('GCP disconnected');
-        }
-    }
-
-    function loadGCPData() {
-        const tableBody = document.getElementById('resources-body');
-        if (!tableBody) return;
-        
-        tableBody.innerHTML = '';
-        
-        gcpMockInstances.forEach(instance => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${instance.id}</td>
-                <td>${instance.name}</td>
-                <td class="cloud-badge">
-                    <i class="fab fa-google" style="color: #4285f4; margin-right: 4px;"></i>
-                    GCP
-                </td>
-                <td><span class="status-${instance.status}">${instance.status.toUpperCase()}</span></td>
-                <td>${instance.days} days</td>
-                <td>$${instance.cost}/mo</td>
-                <td>
-                    ${instance.status === 'idle' ? 
-                        `<button class="btn btn-outline" onclick="sendAlert('${instance.id}')" style="padding: 4px 12px; font-size: 12px;">
-                            <i class="fas fa-bell"></i> Alert
-                        </button>` : 
-                        '<span style="color: #9ca3af;">Active</span>'
-                    }
-                </td>
-            `;
-            tableBody.appendChild(row);
-        });
-        
-        // Update stats
-        const idleCount = gcpMockInstances.filter(i => i.status === 'idle').length;
-        const totalCost = gcpMockInstances.reduce((sum, i) => sum + i.cost, 0);
-        
-        document.getElementById('total-resources').innerText = gcpMockInstances.length;
-        document.getElementById('idle-resources').innerText = idleCount;
-        document.getElementById('monthly-cost').innerText = '$' + totalCost.toFixed(2);
-    }
-
-    function loadDemoData() {
-        loadGCPData(); // Just use GCP data as demo
-    }
-
-    function sendAlert(resourceId) {
-        const email = prompt('Enter email for alert:');
-        if (!email) return;
-        
-        alert(`✅ Alert sent to ${email} for resource ${resourceId}`);
-        
-        const alertsSent = document.getElementById('alertsSent');
-        if (alertsSent) {
-            alertsSent.innerText = parseInt(alertsSent.innerText || '0') + 1;
-        }
-    }
-
-    function showCloud(cloud) {
-        // Only GCP in this page
-    }
-
-    // ===== AUTO-ALERT FUNCTIONS (Copy exactly from dashboard) =====
-    function saveAlertSettings() {
-        const email = document.getElementById('alertEmail')?.value;
-        const frequency = document.getElementById('scanFrequency')?.value;
-        const enabled = document.getElementById('autoAlertToggle')?.checked;
-        
-        if (!email) {
-            alert('Please enter an email address');
-            return;
-        }
-        
-        localStorage.setItem('alert_email', email);
-        localStorage.setItem('scan_frequency', frequency);
-        localStorage.setItem('alerts_enabled', enabled);
-        
-        const alertStatus = document.getElementById('alertStatus');
-        if (alertStatus) {
-            alertStatus.innerText = enabled ? 'ACTIVE' : 'DISABLED';
-            alertStatus.style.background = enabled ? '#10b981' : '#ef4444';
-        }
-        
-        alert('✅ Settings saved!');
-    }
-
-    async function testAlert() {
-        const email = document.getElementById('alertEmail')?.value;
-        
-        if (!email) {
-            alert('Please enter an email address first');
-            return;
-        }
-        
-        const btn = event.target;
-        const originalText = btn.innerHTML;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
-        btn.disabled = true;
-        
-        try {
-            const response = await fetch('https://cloudoptima.onrender.com/api/email/test-alert', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: email })
+            let totalCost = 0;
+            let idleCount = 0;
+            
+            gcpInstances.forEach(inst => {
+                totalCost += inst.cost;
+                if (inst.status === 'idle') idleCount++;
+                
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td>${inst.id}</td>
+                    <td>${inst.name}</td>
+                    <td>${inst.type}</td>
+                    <td>${inst.zone}</td>
+                    <td><span class="status-${inst.status}">${inst.status.toUpperCase()}</span></td>
+                    <td>$${inst.cost}/mo</td>
+                    <td>
+                        ${inst.status === 'idle' ? 
+                            '<button class="btn btn-outline" style="padding: 4px 12px;" onclick="alert(\'Alert sent\')">🔔 Alert</button>' : 
+                            '<span style="color: #9ca3af;">Active</span>'}
+                    </td>
+                `;
             });
             
-            if (response.ok) {
-                alert('✅ Test alert sent! Check your inbox');
-                
-                const alertsSent = document.getElementById('alertsSent');
-                if (alertsSent) {
-                    alertsSent.innerText = parseInt(alertsSent.innerText || '0') + 1;
-                }
-                
-                // Add to recent alerts
-                const recentDiv = document.getElementById('recentAlerts');
-                if (recentDiv) {
-                    const firstChild = recentDiv.firstChild;
-                    const newAlert = document.createElement('div');
-                    newAlert.className = 'alert-item';
-                    newAlert.innerHTML = '<i class="fas fa-check-circle"></i> Test Alert - Just now';
-                    recentDiv.insertBefore(newAlert, firstChild);
-                    
-                    // Keep only last 5 alerts
-                    while (recentDiv.children.length > 5) {
-                        recentDiv.removeChild(recentDiv.lastChild);
-                    }
-                }
-            } else {
-                alert('❌ Failed to send test alert');
-            }
-        } catch (error) {
-            console.error('Test alert error:', error);
-            alert('❌ Could not connect to backend');
-        } finally {
-            btn.innerHTML = originalText;
-            btn.disabled = false;
+            document.getElementById('total-resources').textContent = gcpInstances.length;
+            document.getElementById('idle-resources').textContent = idleCount;
+            document.getElementById('monthly-cost').textContent = '$' + totalCost.toFixed(2);
+            document.getElementById('potential-savings').textContent = '$' + (idleCount * 70).toFixed(0);
         }
-    }
 
-    // ===== INITIALIZATION =====
-    document.addEventListener('DOMContentLoaded', function() {
-        // Load saved settings
-        const savedEmail = localStorage.getItem('alert_email');
-        const savedFrequency = localStorage.getItem('scan_frequency');
-        const alertsEnabled = localStorage.getItem('alerts_enabled');
-        
-        if (savedEmail) {
-            const alertEmail = document.getElementById('alertEmail');
-            if (alertEmail) alertEmail.value = savedEmail;
+        function saveSettings() {
+            alert('Settings saved (mock)');
         }
-        
-        if (savedFrequency) {
-            const scanFreq = document.getElementById('scanFrequency');
-            if (scanFreq) scanFreq.value = savedFrequency;
-        }
-        
-        if (alertsEnabled !== null) {
-            const toggle = document.getElementById('autoAlertToggle');
-            const alertStatus = document.getElementById('alertStatus');
-            if (toggle) toggle.checked = alertsEnabled === 'true';
-            if (alertStatus) {
-                alertStatus.innerText = alertsEnabled === 'true' ? 'ACTIVE' : 'DISABLED';
-                alertStatus.style.background = alertsEnabled === 'true' ? '#10b981' : '#ef4444';
-            }
-        }
-        
-        // Load GCP data
+
+        // Load on page load
         loadGCPData();
-    });
     </script>
 </body>
 </html>
