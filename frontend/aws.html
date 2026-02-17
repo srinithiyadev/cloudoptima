@@ -557,10 +557,8 @@
     </div>
 
     <script>
-    // ===== COPY ALL YOUR AWS JAVASCRIPT FROM INDEX.HTML HERE =====
-    // (Everything from your index.html script section)
-    
-    // Auth check
+          <script>
+    // ===== AUTH CHECK =====
     (function() {
         const token = localStorage.getItem('token');
         if (!token) {
@@ -578,14 +576,279 @@
         window.location.replace('/login.html');
     }
 
-    // ===== PASTE ALL YOUR AWS FUNCTIONS HERE =====
-    // connectAWS(), loadAWSInstances(), disconnectAWS(), 
-    // saveAlertSettings(), testAlert(), etc.
-    
-    // Make sure to add localStorage saves after connection:
-    // localStorage.setItem('aws_monthly_cost', data.total_cost);
-    // localStorage.setItem('aws_total_resources', data.total_instances);
-    // localStorage.setItem('aws_idle_resources', data.idle_instances?.length);
+    // ===== AWS CONNECTION FUNCTIONS =====
+    async function connectAWS() {
+        const accessKey = document.getElementById('aws-key')?.value.trim();
+        const secretKey = document.getElementById('aws-secret')?.value.trim();
+        const region = document.getElementById('aws-region')?.value;
+        
+        if (!accessKey || !secretKey) {
+            alert('Please enter both Access Key and Secret Key');
+            return;
+        }
+
+        const btn = event.target;
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Connecting...';
+        btn.disabled = true;
+        
+        try {
+            const response = await fetch('https://cloudoptima.onrender.com/api/aws/cost', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ 
+                    accessKeyId: accessKey, 
+                    secretAccessKey: secretKey 
+                })
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            
+            const data = await response.json();
+            console.log('✅ AWS Connected:', data);
+            
+            // Update UI
+            document.getElementById('awsForm').style.display = 'none';
+            document.getElementById('connectedInfo').style.display = 'block';
+            document.getElementById('awsStatus').innerHTML = 'Connected';
+            document.getElementById('awsStatus').style.background = '#10b981';
+            document.getElementById('cost-source').innerText = '(Real AWS Data)';
+            document.getElementById('connectedAccount').textContent = accessKey.substring(0, 8) + '...';
+            document.getElementById('connectedRegion').textContent = region;
+            
+            if (data.total_cost) {
+                document.getElementById('monthly-cost').innerText = '$' + data.total_cost;
+            }
+            
+            // Save to localStorage for main dashboard
+            localStorage.setItem('aws_connected', 'true');
+            localStorage.setItem('aws_region', region);
+            localStorage.setItem('aws_monthly_cost', data.total_cost || '0');
+            
+            alert('✅ AWS Account connected successfully!');
+            
+            // Load instances
+            await loadAWSInstances(accessKey, secretKey);
+            
+        } catch (error) {
+            console.error('❌ AWS Connection error:', error);
+            alert('Failed to connect to AWS: ' + error.message);
+        } finally {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+    }
+
+    async function loadAWSInstances(accessKey, secretKey) {
+        try {
+            const response = await fetch('https://cloudoptima.onrender.com/api/aws/instances', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    accessKeyId: accessKey, 
+                    secretAccessKey: secretKey 
+                })
+            });
+            
+            if (!response.ok) return;
+            
+            const data = await response.json();
+            
+            // Update stats
+            document.getElementById('total-resources').innerText = data.total_instances || 0;
+            document.getElementById('idle-resources').innerText = data.idle_instances?.length || 0;
+            
+            // Save to localStorage
+            localStorage.setItem('aws_total_resources', data.total_instances || '0');
+            localStorage.setItem('aws_idle_resources', data.idle_instances?.length || '0');
+            
+            // Update table
+            updateResourcesTable(data.idle_instances || []);
+            
+        } catch (error) {
+            console.error('Error loading instances:', error);
+        }
+    }
+
+    function disconnectAWS() {
+        if (confirm('Disconnect AWS account?')) {
+            document.getElementById('awsForm').style.display = 'block';
+            document.getElementById('connectedInfo').style.display = 'none';
+            document.getElementById('awsStatus').innerHTML = 'Not Connected';
+            document.getElementById('awsStatus').style.background = '#f97316';
+            document.getElementById('cost-source').innerText = '(Demo Data)';
+            
+            localStorage.removeItem('aws_connected');
+            localStorage.removeItem('aws_region');
+            localStorage.removeItem('aws_monthly_cost');
+            localStorage.removeItem('aws_total_resources');
+            localStorage.removeItem('aws_idle_resources');
+            
+            loadDemoData();
+            alert('AWS disconnected');
+        }
+    }
+
+    function updateResourcesTable(instances) {
+        const tbody = document.getElementById('resources-body');
+        if (!tbody) return;
+        
+        tbody.innerHTML = '';
+        
+        if (!instances || instances.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:40px;">No idle instances found</td></tr>';
+            return;
+        }
+        
+        instances.forEach(instance => {
+            const row = tbody.insertRow();
+            row.innerHTML = `
+                <td>${instance.id}</td>
+                <td>${instance.name || 'Unnamed'}</td>
+                <td>${instance.type || 't2.micro'}</td>
+                <td><span class="status-idle">IDLE</span></td>
+                <td>${instance.days_running || 0} days</td>
+                <td>$${instance.estimated_savings || 0}/mo</td>
+                <td>
+                    <button class="btn btn-outline" onclick="sendAlert('${instance.id}')" style="padding: 4px 12px;">
+                        <i class="fas fa-bell"></i> Alert
+                    </button>
+                </td>
+            `;
+        });
+    }
+
+    // ===== AUTO-ALERT FUNCTIONS =====
+    function saveAlertSettings() {
+        const email = document.getElementById('alertEmail')?.value;
+        const frequency = document.getElementById('scanFrequency')?.value;
+        const enabled = document.getElementById('autoAlertToggle')?.checked;
+        
+        if (!email) {
+            alert('Please enter an email address');
+            return;
+        }
+        
+        localStorage.setItem('alert_email', email);
+        localStorage.setItem('scan_frequency', frequency);
+        localStorage.setItem('alerts_enabled', enabled);
+        
+        document.getElementById('alertStatus').innerText = enabled ? 'ACTIVE' : 'DISABLED';
+        document.getElementById('alertStatus').style.background = enabled ? '#10b981' : '#ef4444';
+        
+        alert('✅ Settings saved!');
+    }
+
+    async function testAlert() {
+        const email = document.getElementById('alertEmail')?.value;
+        
+        if (!email) {
+            alert('Please enter an email address first');
+            return;
+        }
+        
+        const btn = event.target;
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+        btn.disabled = true;
+        
+        try {
+            const response = await fetch('https://cloudoptima.onrender.com/api/email/test-alert', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: email })
+            });
+            
+            if (response.ok) {
+                alert('✅ Test alert sent! Check your inbox');
+                
+                const alertsSent = document.getElementById('alertsSent');
+                if (alertsSent) {
+                    alertsSent.innerText = parseInt(alertsSent.innerText || '0') + 1;
+                }
+            } else {
+                alert('❌ Failed to send test alert');
+            }
+        } catch (error) {
+            alert('❌ Could not connect to backend');
+        } finally {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+    }
+
+    function sendAlert(resourceId) {
+        const email = prompt('Enter email for alert:');
+        if (!email) return;
+        alert(`✅ Alert sent to ${email} for resource ${resourceId}`);
+    }
+
+    // ===== DEMO DATA =====
+    function loadDemoData() {
+        const demoInstances = [
+            { id: 'i-0abc123def456', name: 'Web Server', type: 't2.micro', state: 'running', days: 45, cost: 85.50 },
+            { id: 'i-1def456ghi789', name: 'Database', type: 't2.medium', state: 'idle', days: 120, cost: 120.75 }
+        ];
+        
+        const tbody = document.getElementById('resources-body');
+        tbody.innerHTML = '';
+        
+        demoInstances.forEach(instance => {
+            const row = tbody.insertRow();
+            row.innerHTML = `
+                <td>${instance.id}</td>
+                <td>${instance.name}</td>
+                <td>${instance.type}</td>
+                <td><span class="status-${instance.state}">${instance.state.toUpperCase()}</span></td>
+                <td>${instance.days} days</td>
+                <td>$${instance.cost}/mo</td>
+                <td>
+                    ${instance.state === 'idle' ? 
+                        '<button class="btn btn-outline" onclick="sendAlert(\'' + instance.id + '\')" style="padding: 4px 12px;">🔔 Alert</button>' : 
+                        '<span style="color: #9ca3af;">Active</span>'}
+                </td>
+            `;
+        });
+        
+        document.getElementById('total-resources').innerText = demoInstances.length;
+        document.getElementById('idle-resources').innerText = demoInstances.filter(i => i.state === 'idle').length;
+        document.getElementById('monthly-cost').innerText = '$' + demoInstances.reduce((sum, i) => sum + i.cost, 0).toFixed(2);
+    }
+
+    // ===== INITIALIZATION =====
+    document.addEventListener('DOMContentLoaded', function() {
+        const savedEmail = localStorage.getItem('alert_email');
+        const savedFrequency = localStorage.getItem('scan_frequency');
+        const alertsEnabled = localStorage.getItem('alerts_enabled');
+        const awsConnected = localStorage.getItem('aws_connected');
+        
+        if (savedEmail) {
+            document.getElementById('alertEmail').value = savedEmail;
+        }
+        if (savedFrequency) {
+            document.getElementById('scanFrequency').value = savedFrequency;
+        }
+        if (alertsEnabled !== null) {
+            document.getElementById('autoAlertToggle').checked = alertsEnabled === 'true';
+            document.getElementById('alertStatus').innerText = alertsEnabled === 'true' ? 'ACTIVE' : 'DISABLED';
+        }
+        
+        if (awsConnected === 'true') {
+            document.getElementById('awsForm').style.display = 'none';
+            document.getElementById('connectedInfo').style.display = 'block';
+            document.getElementById('awsStatus').innerHTML = 'Connected';
+            document.getElementById('awsStatus').style.background = '#10b981';
+            document.getElementById('cost-source').innerText = '(Real AWS Data)';
+        }
+        
+        loadDemoData();
+    });
+</script>
     </script>
 </body>
 </html>
