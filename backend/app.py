@@ -6,7 +6,8 @@ from routes.test_email import test_bp  # ← ADD THIS IMPORT
 import os
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, origins=['https://cloudoptima.vercel.app', 'http://localhost:5500'])
+
 
 # Register blueprints
 app.register_blueprint(aws_bp, url_prefix='/api/aws')
