@@ -86,6 +86,10 @@
         .btn:hover {
             background: #4338ca;
         }
+        .btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
         .links {
             margin-top: 25px;
             text-align: center;
@@ -156,16 +160,16 @@
                 <input type="checkbox" id="terms" required>
                 <label>I agree to Terms & Conditions</label>
             </div>
-            <button type="submit" class="btn">Create Account</button>
+            <button type="submit" class="btn" id="signupBtn">Create Account</button>
         </form>
 
         <div class="links">
-            <p>Already have an account? <a href="/login.html">Sign In</a></p>
+            <p>Already have an account? <a href="login.html">Sign In</a></p>
         </div>
     </div>
 
     <script>
-        document.getElementById('signupForm').addEventListener('submit', function(e) {
+        document.getElementById('signupForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const name = document.getElementById('fullName').value;
@@ -173,6 +177,7 @@
             const password = document.getElementById('password').value;
             const terms = document.getElementById('terms').checked;
             const alertDiv = document.getElementById('alertMessage');
+            const signupBtn = document.getElementById('signupBtn');
 
             if (!terms) {
                 alertDiv.className = 'alert alert-error';
@@ -186,31 +191,49 @@
                 return;
             }
 
-            // Get existing users
-            const users = JSON.parse(localStorage.getItem('users') || '[]');
-            
-            // Check if email exists
-            if (users.some(u => u.email === email)) {
+            // Disable button and show loading
+            signupBtn.disabled = true;
+            signupBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating account...';
+
+            try {
+                // Call backend API
+                const response = await fetch('http://13.220.52.70:5000/api/signup', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        name: name,
+                        email: email, 
+                        password: password 
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alertDiv.className = 'alert alert-success';
+                    alertDiv.innerHTML = 'Account created! Redirecting to login...';
+                    
+                    setTimeout(() => {
+                        window.location.href = 'login.html';
+                    }, 2000);
+                } else {
+                    alertDiv.className = 'alert alert-error';
+                    alertDiv.innerHTML = data.error || 'Signup failed';
+                    
+                    // Re-enable button
+                    signupBtn.disabled = false;
+                    signupBtn.innerHTML = 'Create Account';
+                }
+            } catch (error) {
                 alertDiv.className = 'alert alert-error';
-                alertDiv.innerHTML = 'Email already registered';
-                return;
+                alertDiv.innerHTML = 'Connection error. Please try again.';
+                
+                // Re-enable button
+                signupBtn.disabled = false;
+                signupBtn.innerHTML = 'Create Account';
             }
-            
-            // Add new user
-            users.push({
-                name: name,
-                email: email,
-                password: password
-            });
-            
-            localStorage.setItem('users', JSON.stringify(users));
-            
-            alertDiv.className = 'alert alert-success';
-            alertDiv.innerHTML = 'Account created! Redirecting to login...';
-            
-            setTimeout(() => {
-                window.location.href = '/login.html';
-            }, 2000);
         });
     </script>
 </body>

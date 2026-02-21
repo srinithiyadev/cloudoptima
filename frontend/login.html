@@ -85,6 +85,10 @@
         .btn:hover {
             background: #4338ca;
         }
+        .btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
         .links {
             margin-top: 25px;
             text-align: center;
@@ -140,47 +144,67 @@
                     <input type="password" id="password" placeholder="Enter password" required>
                 </div>
             </div>
-            <button type="submit" class="btn">Sign In</button>
+            <button type="submit" class="btn" id="loginBtn">Sign In</button>
         </form>
 
         <div class="links">
-            <a href="/signup.html">Create Account</a>
+            <a href="signup.html">Create Account</a>
             <a href="#">Forgot Password?</a>
         </div>
     </div>
 
     <script>
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             const alertDiv = document.getElementById('alertMessage');
-
-            // Get users from localStorage
-            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            const loginBtn = document.getElementById('loginBtn');
             
-            // Find user
-            const user = users.find(u => u.email === email && u.password === password);
+            // Disable button and show loading
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in...';
             
-            if (user) {
-                // Clear old data and set new login
-                localStorage.clear();
-                localStorage.setItem('token', 'dummy-token-' + Date.now());
-                localStorage.setItem('user', JSON.stringify({
-                    email: user.email,
-                    name: user.name
-                }));
+            try {
+                // Call backend API
+                const response = await fetch('http://13.220.52.70:5000/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
                 
-                alertDiv.className = 'alert alert-success';
-                alertDiv.innerHTML = 'Login successful! Redirecting...';
+                const data = await response.json();
                 
-                setTimeout(() => {
-                    window.location.href = '/';
-                }, 1000);
-            } else {
+                if (data.success) {
+                    // Clear old data and set new login
+                    localStorage.clear();
+                    localStorage.setItem('token', 'logged-in');
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    
+                    alertDiv.className = 'alert alert-success';
+                    alertDiv.innerHTML = 'Login successful! Redirecting...';
+                    
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 1000);
+                } else {
+                    alertDiv.className = 'alert alert-error';
+                    alertDiv.innerHTML = data.error || 'Invalid email or password';
+                    
+                    // Re-enable button
+                    loginBtn.disabled = false;
+                    loginBtn.innerHTML = 'Sign In';
+                }
+            } catch (error) {
                 alertDiv.className = 'alert alert-error';
-                alertDiv.innerHTML = 'Invalid email or password';
+                alertDiv.innerHTML = 'Connection error. Please try again.';
+                
+                // Re-enable button
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = 'Sign In';
             }
         });
     </script>
