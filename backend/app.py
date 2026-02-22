@@ -4,6 +4,7 @@ from alert import alert_bp
 from aws_api import aws_bp
 from routes.test_email import test_bp  # ← ADD THIS IMPORT
 import os
+import pymysql
 
 
 # Database configuration
