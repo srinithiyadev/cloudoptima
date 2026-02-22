@@ -40,6 +40,41 @@ app.register_blueprint(test_bp)  # ← ADD THIS REGISTRATION
 @app.route('/health')
 def health_check():
     return jsonify({'status': 'healthy', 'service': 'CloudOptima API'})
+@app.route('/api/user/settings', methods=['POST'])
+def save_user_settings():
+    data = request.json
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    # Check if settings exist
+    cursor.execute("SELECT * FROM alerts WHERE user_id = %s", (data['userId'],))
+    existing = cursor.fetchone()
+    
+    if existing:
+        cursor.execute("""
+            UPDATE alerts 
+            SET alert_email = %s, frequency = %s, enabled = %s 
+            WHERE user_id = %s
+        """, (data['alertEmail'], data['scanFrequency'], data['alertOnIdle'], data['userId']))
+    else:
+        cursor.execute("""
+            INSERT INTO alerts (user_id, alert_email, frequency, enabled)
+            VALUES (%s, %s, %s, %s)
+        """, (data['userId'], data['alertEmail'], data['scanFrequency'], data['alertOnIdle']))
+    
+    conn.commit()
+    conn.close()
+    return jsonify({'success': True})
+
+@app.route('/api/user/settings', methods=['GET'])
+def get_user_settings():
+    user_id = request.args.get('userId')
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM alerts WHERE user_id = %s", (user_id,))
+    settings = cursor.fetchone()
+    conn.close()
+    return jsonify(settings or {})
 
 if __name__ == '__main__':
     os.makedirs('data', exist_ok=True)
