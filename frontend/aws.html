@@ -593,7 +593,7 @@
         btn.disabled = true;
         
         try {
-           const response = await fetch('http://34.230.84.186/api/aws/cost', {
+           const response = await fetch('http://52.3.177.165/api/aws/cost', {
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json',
@@ -646,7 +646,7 @@
 
     async function loadAWSInstances(accessKey, secretKey) {
         try {
-            const response = await fetch('http://34.230.84.186/api/aws/cost', {
+            const response = await fetch('http://52.3.177.165/api/aws/cost', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
@@ -758,7 +758,7 @@
         btn.disabled = true;
         
         try {
-            const response = await fetch('http://34.230.84.186/api/email/test-alert', {
+            const response = await fetch('http://52.3.177.165/api/email/test-alert', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email: email })
