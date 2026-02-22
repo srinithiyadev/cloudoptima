@@ -1,15 +1,8 @@
 {
-  "builds": [
-    { "src": "frontend/**/*", "use": "@vercel/static" }
-  ],
-  "routes": [
+  "rewrites": [
     {
-      "src": "/api/(.*)",
-      "dest": "http://52.3.177.165/api/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/frontend/$1"
+      "source": "/api/(.*)",
+      "destination": "http://54.157.250.127/api/$1"
     }
   ]
 }
