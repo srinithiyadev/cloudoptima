@@ -580,7 +580,7 @@
     if (!user.id) return;
     
     try {
-        const response = await fetch(`/api/user/settings?userId=${user.id}`);
+        const response = await fetch(`http://54.157.250.127/api/user/settings?userId=${user.id}`);
         const settings = await response.json();
         
         if (settings && Object.keys(settings).length > 0) {
