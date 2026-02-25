@@ -169,7 +169,7 @@
         const user = users.find(u => u.email === email && u.password === password);
         
         if (user) {
-            // Save current user
+            // Save current user - THIS IS THE KEY PART
             localStorage.setItem('currentUser', JSON.stringify({
                 email: user.email,
                 name: user.name || user.email.split('@')[0],
@@ -179,9 +179,10 @@
             alertDiv.className = 'alert alert-success';
             alertDiv.innerHTML = 'Login successful! Redirecting...';
             
+            // Force redirect to dashboard
             setTimeout(() => {
                 window.location.href = 'index.html';
-            }, 1000);
+            }, 500);
         } else {
             alertDiv.className = 'alert alert-error';
             alertDiv.innerHTML = 'Invalid email or password';

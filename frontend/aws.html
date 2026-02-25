@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AWS Dashboard - CloudOptima</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
+    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1048.0.min.js"></script>
+<style>
         /* ===== THEME FROM NEW INDEX.HTML ===== */
         * {
             margin: 0;
@@ -556,27 +557,26 @@
         <p>© 2026 CloudOptima · Open Source · Free Forever</p>
     </div>
 
-    <script>
-        
-    // ===== AUTH CHECK =====
+<script>
+    // ===== AUTH CHECK (localStorage version) =====
     (function() {
-        const token = localStorage.getItem('token');
-        if (!token) {
-            window.location.replace('/login.html');
+        const currentUser = localStorage.getItem('currentUser');
+        if (!currentUser) {
+            window.location.replace('login.html');
             return;
         }
         try {
-            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            const user = JSON.parse(currentUser);
             document.getElementById('userEmailText').textContent = user.email || 'User';
         } catch (e) {}
     })();
 
     function logout() {
-        localStorage.clear();
-        window.location.replace('http://54.157.250.127/login.html');
+        localStorage.removeItem('currentUser');
+        window.location.replace('login.html');
     }
 
-    // ===== AWS CONNECTION FUNCTIONS =====
+    // ===== AWS DIRECT CONNECTION (No Backend Needed) =====
     async function connectAWS() {
         const accessKey = document.getElementById('aws-key')?.value.trim();
         const secretKey = document.getElementById('aws-secret')?.value.trim();
@@ -593,24 +593,47 @@
         btn.disabled = true;
         
         try {
-           const response = await fetch('http://54.157.250.127/api/aws/cost', {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({ 
-                    accessKeyId: accessKey, 
-                    secretAccessKey: secretKey 
-                })
+            // Configure AWS SDK
+            AWS.config.update({
+                accessKeyId: accessKey,
+                secretAccessKey: secretKey,
+                region: region
             });
             
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}`);
-            }
+            const ec2 = new AWS.EC2({apiVersion: '2016-11-15'});
             
-            const data = await response.json();
-            console.log('✅ AWS Connected:', data);
+            // Get all instances
+            const data = await ec2.describeInstances().promise();
+            
+            let totalInstances = 0;
+            let idleInstances = [];
+            let runningInstances = [];
+            let allInstances = [];
+            
+            // Process reservations and instances
+            data.Reservations.forEach(reservation => {
+                reservation.Instances.forEach(instance => {
+                    totalInstances++;
+                    
+                    const instanceInfo = {
+                        id: instance.InstanceId,
+                        name: instance.Tags?.find(t => t.Key === 'Name')?.Value || 'Unnamed',
+                        type: instance.InstanceType,
+                        state: instance.State.Name,
+                        launchTime: instance.LaunchTime,
+                        daysRunning: Math.floor((new Date() - new Date(instance.LaunchTime)) / (1000 * 60 * 60 * 24))
+                    };
+                    
+                    allInstances.push(instanceInfo);
+                    
+                    // Check if instance is idle (stopped)
+                    if (instance.State.Name === 'stopped') {
+                        idleInstances.push(instanceInfo);
+                    } else if (instance.State.Name === 'running') {
+                        runningInstances.push(instanceInfo);
+                    }
+                });
+            });
             
             // Update UI
             document.getElementById('awsForm').style.display = 'none';
@@ -621,58 +644,80 @@
             document.getElementById('connectedAccount').textContent = accessKey.substring(0, 8) + '...';
             document.getElementById('connectedRegion').textContent = region;
             
-            if (data.total_cost) {
-                document.getElementById('monthly-cost').innerText = '$' + data.total_cost;
-            }
+            document.getElementById('total-resources').innerText = totalInstances;
+            document.getElementById('idle-resources').innerText = idleInstances.length;
             
-            // Save to localStorage for main dashboard
-            localStorage.setItem('aws_connected', 'true');
-            localStorage.setItem('aws_region', region);
-            localStorage.setItem('aws_monthly_cost', data.total_cost || '0');
+            // Calculate estimated monthly cost
+            let totalCost = 0;
+            allInstances.forEach(instance => {
+                totalCost += estimateCost(instance.type);
+            });
+            document.getElementById('monthly-cost').innerText = '$' + totalCost.toFixed(2);
             
-            alert('✅ AWS Account connected successfully!');
+            // Update table with ALL instances
+            updateResourcesTable(allInstances);
             
-            // Load instances
-            await loadAWSInstances(accessKey, secretKey);
+            alert(`✅ Connected! Found ${totalInstances} instances (${idleInstances.length} idle)`);
             
         } catch (error) {
-            console.error('❌ AWS Connection error:', error);
-            alert('Failed to connect to AWS: ' + error.message);
+            console.error('AWS Error:', error);
+            alert('Failed to connect: ' + error.message);
         } finally {
             btn.innerHTML = originalText;
             btn.disabled = false;
         }
     }
 
-    async function loadAWSInstances(accessKey, secretKey) {
-        try {
-            const response = await fetch('http://54.157.250.127/api/aws/cost', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    accessKeyId: accessKey, 
-                    secretAccessKey: secretKey 
-                })
-            });
-            
-            if (!response.ok) return;
-            
-            const data = await response.json();
-            
-            // Update stats
-            document.getElementById('total-resources').innerText = data.total_instances || 0;
-            document.getElementById('idle-resources').innerText = data.idle_instances?.length || 0;
-            
-            // Save to localStorage
-            localStorage.setItem('aws_total_resources', data.total_instances || '0');
-            localStorage.setItem('aws_idle_resources', data.idle_instances?.length || '0');
-            
-            // Update table
-            updateResourcesTable(data.idle_instances || []);
-            
-        } catch (error) {
-            console.error('Error loading instances:', error);
+    // Helper to estimate costs (simplified)
+    function estimateCost(instanceType) {
+        const costs = {
+            't2.micro': 8.50,
+            't2.small': 17.00,
+            't2.medium': 34.00,
+            't3.micro': 8.20,
+            't3.small': 16.40,
+            't3.medium': 32.80,
+            't3.large': 65.60,
+            'm5.large': 75.00,
+            'm5.xlarge': 150.00,
+            'c5.large': 70.00,
+            'c5.xlarge': 140.00,
+            'r5.large': 80.00,
+            'r5.xlarge': 160.00
+        };
+        return costs[instanceType] || 25.00;
+    }
+
+    function updateResourcesTable(instances) {
+        const tbody = document.getElementById('resources-body');
+        if (!tbody) return;
+        
+        tbody.innerHTML = '';
+        
+        if (instances.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:40px;">No instances found</td></tr>';
+            return;
         }
+        
+        instances.forEach(instance => {
+            const row = tbody.insertRow();
+            const isIdle = instance.state === 'stopped';
+            const statusClass = isIdle ? 'status-idle' : 'status-running';
+            
+            row.innerHTML = `
+                <td>${instance.id}</td>
+                <td>${instance.name}</td>
+                <td>${instance.type}</td>
+                <td><span class="${statusClass}">${instance.state.toUpperCase()}</span></td>
+                <td>${instance.daysRunning} days</td>
+                <td>$${estimateCost(instance.type).toFixed(2)}/mo</td>
+                <td>
+                    ${isIdle ? 
+                        '<button class="btn btn-outline" onclick="sendAlert(\'' + instance.id + '\')" style="padding: 4px 12px;"><i class="fas fa-bell"></i> Alert</button>' : 
+                        '<span style="color: #9ca3af;">Active</span>'}
+                </td>
+            `;
+        });
     }
 
     function disconnectAWS() {
@@ -683,44 +728,9 @@
             document.getElementById('awsStatus').style.background = '#f97316';
             document.getElementById('cost-source').innerText = '(Demo Data)';
             
-            localStorage.removeItem('aws_connected');
-            localStorage.removeItem('aws_region');
-            localStorage.removeItem('aws_monthly_cost');
-            localStorage.removeItem('aws_total_resources');
-            localStorage.removeItem('aws_idle_resources');
-            
             loadDemoData();
             alert('AWS disconnected');
         }
-    }
-
-    function updateResourcesTable(instances) {
-        const tbody = document.getElementById('resources-body');
-        if (!tbody) return;
-        
-        tbody.innerHTML = '';
-        
-        if (!instances || instances.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:40px;">No idle instances found</td></tr>';
-            return;
-        }
-        
-        instances.forEach(instance => {
-            const row = tbody.insertRow();
-            row.innerHTML = `
-                <td>${instance.id}</td>
-                <td>${instance.name || 'Unnamed'}</td>
-                <td>${instance.type || 't2.micro'}</td>
-                <td><span class="status-idle">IDLE</span></td>
-                <td>${instance.days_running || 0} days</td>
-                <td>$${instance.estimated_savings || 0}/mo</td>
-                <td>
-                    <button class="btn btn-outline" onclick="sendAlert('${instance.id}')" style="padding: 4px 12px;">
-                        <i class="fas fa-bell"></i> Alert
-                    </button>
-                </td>
-            `;
-        });
     }
 
     // ===== AUTO-ALERT FUNCTIONS =====
@@ -744,72 +754,51 @@
         alert('✅ Settings saved!');
     }
 
-    async function testAlert() {
+    function testAlert() {
         const email = document.getElementById('alertEmail')?.value;
-        
         if (!email) {
             alert('Please enter an email address first');
             return;
         }
-        
-        const btn = event.target;
-        const originalText = btn.innerHTML;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
-        btn.disabled = true;
-        
-        try {
-            const response = await fetch('http://54.157.250.127/api/email/test-alert', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: email })
-            });
-            
-            if (response.ok) {
-                alert('✅ Test alert sent! Check your inbox');
-                
-                const alertsSent = document.getElementById('alertsSent');
-                if (alertsSent) {
-                    alertsSent.innerText = parseInt(alertsSent.innerText || '0') + 1;
-                }
-            } else {
-                alert('❌ Failed to send test alert');
-            }
-        } catch (error) {
-            alert('❌ Could not connect to backend');
-        } finally {
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-        }
+        alert(`✅ Demo: Test alert would be sent to ${email}`);
     }
 
     function sendAlert(resourceId) {
-        const email = prompt('Enter email for alert:');
+        const email = document.getElementById('alertEmail')?.value || prompt('Enter email for alert:');
         if (!email) return;
-        alert(`✅ Alert sent to ${email} for resource ${resourceId}`);
+        alert(`✅ Demo: Alert for ${resourceId} would be sent to ${email}`);
     }
 
     // ===== DEMO DATA =====
     function loadDemoData() {
         const demoInstances = [
             { id: 'i-0abc123def456', name: 'Web Server', type: 't2.micro', state: 'running', days: 45, cost: 85.50 },
-            { id: 'i-1def456ghi789', name: 'Database', type: 't2.medium', state: 'idle', days: 120, cost: 120.75 }
+            { id: 'i-1def456ghi789', name: 'Database', type: 't2.medium', state: 'idle', days: 120, cost: 120.75 },
+            { id: 'i-2ghi789jkl012', name: 'App Server', type: 't3.small', state: 'running', days: 30, cost: 95.25 },
+            { id: 'i-3jkl012mno345', name: 'Test VM', type: 't2.nano', state: 'idle', days: 90, cost: 65.00 },
+            { id: 'i-4mno345pqr678', name: 'K8s Node', type: 't3.medium', state: 'running', days: 15, cost: 110.30 },
+            { id: 'i-5pqr678stu901', name: 'Backup', type: 't2.small', state: 'idle', days: 200, cost: 75.40 }
         ];
         
         const tbody = document.getElementById('resources-body');
+        if (!tbody) return;
+        
         tbody.innerHTML = '';
         
         demoInstances.forEach(instance => {
             const row = tbody.insertRow();
+            const statusClass = instance.state === 'idle' ? 'status-idle' : 'status-running';
+            
             row.innerHTML = `
                 <td>${instance.id}</td>
                 <td>${instance.name}</td>
                 <td>${instance.type}</td>
-                <td><span class="status-${instance.state}">${instance.state.toUpperCase()}</span></td>
+                <td><span class="${statusClass}">${instance.state.toUpperCase()}</span></td>
                 <td>${instance.days} days</td>
-                <td>$${instance.cost}/mo</td>
+                <td>$${instance.cost.toFixed(2)}/mo</td>
                 <td>
                     ${instance.state === 'idle' ? 
-                        '<button class="btn btn-outline" onclick="sendAlert(\'' + instance.id + '\')" style="padding: 4px 12px;">🔔 Alert</button>' : 
+                        '<button class="btn btn-outline" onclick="sendAlert(\'' + instance.id + '\')" style="padding: 4px 12px;"><i class="fas fa-bell"></i> Alert</button>' : 
                         '<span style="color: #9ca3af;">Active</span>'}
                 </td>
             `;
@@ -825,7 +814,6 @@
         const savedEmail = localStorage.getItem('alert_email');
         const savedFrequency = localStorage.getItem('scan_frequency');
         const alertsEnabled = localStorage.getItem('alerts_enabled');
-        const awsConnected = localStorage.getItem('aws_connected');
         
         if (savedEmail) {
             document.getElementById('alertEmail').value = savedEmail;
@@ -838,7 +826,8 @@
             document.getElementById('alertStatus').innerText = alertsEnabled === 'true' ? 'ACTIVE' : 'DISABLED';
         }
         
-        if (awsConnected === 'true') {
+        // Check if AWS was previously connected
+        if (localStorage.getItem('aws_connected') === 'true') {
             document.getElementById('awsForm').style.display = 'none';
             document.getElementById('connectedInfo').style.display = 'block';
             document.getElementById('awsStatus').innerHTML = 'Connected';
@@ -848,7 +837,6 @@
         
         loadDemoData();
     });
-</script>
-    </script>
+</script>  
 </body>
 </html>
