@@ -154,59 +154,39 @@
     </div>
 
     <script>
-        document.getElementById('loginForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const alertDiv = document.getElementById('alertMessage');
+        const loginBtn = document.getElementById('loginBtn');
+        
+        // Get users from localStorage
+        const users = JSON.parse(localStorage.getItem('users') || '[]');
+        
+        // Find user
+        const user = users.find(u => u.email === email && u.password === password);
+        
+        if (user) {
+            // Save current user
+            localStorage.setItem('currentUser', JSON.stringify({
+                email: user.email,
+                name: user.name || user.email.split('@')[0],
+                loggedIn: true
+            }));
             
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const alertDiv = document.getElementById('alertMessage');
-            const loginBtn = document.getElementById('loginBtn');
+            alertDiv.className = 'alert alert-success';
+            alertDiv.innerHTML = 'Login successful! Redirecting...';
             
-            // Disable button and show loading
-            loginBtn.disabled = true;
-            loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in...';
-            
-            try {
-                // Call backend API
-                const response = await fetch('http://54.157.250.127/api/login', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ email, password })
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    // Clear old data and set new login
-                    localStorage.clear();
-                    localStorage.setItem('token', 'logged-in');
-                    localStorage.setItem('user', JSON.stringify(data.user));
-                    
-                    alertDiv.className = 'alert alert-success';
-                    alertDiv.innerHTML = 'Login successful! Redirecting...';
-                    
-                    setTimeout(() => {
-                        window.location.href = 'index.html';
-                    }, 1000);
-                } else {
-                    alertDiv.className = 'alert alert-error';
-                    alertDiv.innerHTML = data.error || 'Invalid email or password';
-                    
-                    // Re-enable button
-                    loginBtn.disabled = false;
-                    loginBtn.innerHTML = 'Sign In';
-                }
-            } catch (error) {
-                alertDiv.className = 'alert alert-error';
-                alertDiv.innerHTML = 'Connection error. Please try again.';
-                
-                // Re-enable button
-                loginBtn.disabled = false;
-                loginBtn.innerHTML = 'Sign In';
-            }
-        });
-    </script>
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 1000);
+        } else {
+            alertDiv.className = 'alert alert-error';
+            alertDiv.innerHTML = 'Invalid email or password';
+        }
+    });
+</script>
 </body>
 </html>

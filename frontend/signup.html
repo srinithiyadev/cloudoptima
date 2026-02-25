@@ -169,72 +169,56 @@
     </div>
 
     <script>
-        document.getElementById('signupForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const name = document.getElementById('fullName').value;
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const terms = document.getElementById('terms').checked;
-            const alertDiv = document.getElementById('alertMessage');
-            const signupBtn = document.getElementById('signupBtn');
+    document.getElementById('signupForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const name = document.getElementById('fullName').value;
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const terms = document.getElementById('terms').checked;
+        const alertDiv = document.getElementById('alertMessage');
+        const signupBtn = document.getElementById('signupBtn');
 
-            if (!terms) {
-                alertDiv.className = 'alert alert-error';
-                alertDiv.innerHTML = 'Please accept Terms & Conditions';
-                return;
-            }
+        if (!terms) {
+            alertDiv.className = 'alert alert-error';
+            alertDiv.innerHTML = 'Please accept Terms & Conditions';
+            return;
+        }
 
-            if (password.length < 6) {
-                alertDiv.className = 'alert alert-error';
-                alertDiv.innerHTML = 'Password must be at least 6 characters';
-                return;
-            }
+        if (password.length < 6) {
+            alertDiv.className = 'alert alert-error';
+            alertDiv.innerHTML = 'Password must be at least 6 characters';
+            return;
+        }
 
-            // Disable button and show loading
-            signupBtn.disabled = true;
-            signupBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating account...';
-
-            try {
-                // Call backend API
-                const response = await fetch('http://54.157.250.127/api/signup', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ 
-                        name: name,
-                        email: email, 
-                        password: password 
-                    })
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    alertDiv.className = 'alert alert-success';
-                    alertDiv.innerHTML = 'Account created! Redirecting to login...';
-                    
-                    setTimeout(() => {
-                        window.location.href = 'login.html';
-                    }, 2000);
-                } else {
-                    alertDiv.className = 'alert alert-error';
-                    alertDiv.innerHTML = data.error || 'Signup failed';
-                    
-                    // Re-enable button
-                    signupBtn.disabled = false;
-                    signupBtn.innerHTML = 'Create Account';
-                }
-            } catch (error) {
-                alertDiv.className = 'alert alert-error';
-                alertDiv.innerHTML = 'Connection error. Please try again.';
-                
-                // Re-enable button
-                signupBtn.disabled = false;
-                signupBtn.innerHTML = 'Create Account';
-            }
+        // Get existing users
+        const users = JSON.parse(localStorage.getItem('users') || '[]');
+        
+        // Check if email exists
+        if (users.some(u => u.email === email)) {
+            alertDiv.className = 'alert alert-error';
+            alertDiv.innerHTML = 'Email already registered';
+            return;
+        }
+        
+        // Add new user
+        users.push({
+            id: Date.now(),
+            name: name,
+            email: email,
+            password: password,
+            created: new Date().toISOString()
         });
+        
+        localStorage.setItem('users', JSON.stringify(users));
+        
+        alertDiv.className = 'alert alert-success';
+        alertDiv.innerHTML = 'Account created! Redirecting to login...';
+        
+        setTimeout(() => {
+            window.location.href = 'login.html';
+        }, 2000);
+    });
     </script>
 </body>
 </html>
