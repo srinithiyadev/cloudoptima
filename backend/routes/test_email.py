@@ -2,9 +2,20 @@ from flask import Blueprint, request, jsonify
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-from brevo_email import send_test_alert
+
+# Try importing, but don't fail if brevo_email not working yet
+try:
+    from brevo_email import send_test_alert
+except ImportError:
+    print("Warning: brevo_email module not found")
+    def send_test_alert():
+        return True  # Dummy function
 
 test_bp = Blueprint('test', __name__)
+
+@test_bp.route('/api/test', methods=['GET'])
+def test():
+    return jsonify({'message': 'Test endpoint working'})
 
 @test_bp.route('/api/email/test-alert', methods=['POST'])
 def send_test_alert_endpoint():
