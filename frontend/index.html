@@ -650,24 +650,30 @@
     </div>
 
     <script>
-        // Auth check (simple)
-        (function() {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                window.location.replace('login.html');
-                return;
-            }
-            try {
-                const user = JSON.parse(localStorage.getItem('user') || '{}');
-                document.getElementById('userEmailText').textContent = user.email || 'student@example.com';
-                document.getElementById('userName').textContent = user.email ? user.email.split('@')[0] : 'Optimizer';
-            } catch (e) {}
-        })();
-
-        function logout() {
-            localStorage.clear();
+       // Auth check - use currentUser (match with login page)
+(function() {
+    const currentUser = localStorage.getItem('currentUser');
+    if (!currentUser) {
+        window.location.replace('login.html');
+        return;
+    }
+    try {
+        const user = JSON.parse(currentUser);
+        if (!user.loggedIn) {
             window.location.replace('login.html');
+            return;
         }
+        document.getElementById('userEmailText').textContent = user.email || 'student@example.com';
+        document.getElementById('userName').textContent = user.email ? user.email.split('@')[0] : 'Optimizer';
+    } catch (e) {
+        window.location.replace('login.html');
+    }
+})();
+
+function logout() {
+    localStorage.removeItem('currentUser');  // Only remove currentUser, not everything
+    window.location.replace('login.html');
+}
 
         // Load stats (from localStorage saved by cloud pages)
         document.addEventListener('DOMContentLoaded', function() {
