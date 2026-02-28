@@ -126,7 +126,7 @@
         // Load users
         async function loadUsers() {
             try {
-                const res = await fetch('https://cloudoptima-api.onrender.com/api/admin/users');
+                const res = await fetch('https://cloudoptima-api-python.onrender.com/api/admin/users');
                 const data = await res.json();
                 users = data.users || [];
                 displayUsers(users);

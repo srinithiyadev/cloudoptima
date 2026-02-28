@@ -543,7 +543,7 @@
         })();
 
         function logout() {
-            fetch('https://cloudoptima-api.onrender.com/api/admin/logs', {
+            fetch('https://cloudoptima-api-python.onrender.com/api/admin/logs', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ action: 'admin_logout' })
@@ -555,7 +555,7 @@
         // Load stats
         async function loadStats() {
             try {
-                const res = await fetch('https://cloudoptima-api.onrender.com/api/admin/stats');
+                const res = await fetch('https://cloudoptima-api-python.onrender.com/api/admin/stats');
                 const data = await res.json();
                 
                 document.getElementById('statsContainer').innerHTML = `
@@ -600,7 +600,7 @@
         // Load chart data
         async function loadChartData(days = 30) {
             try {
-                const res = await fetch('https://cloudoptima-api.onrender.com/api/admin/stats');
+                const res = await fetch('https://cloudoptima-api-python.onrender.com/api/admin/stats');
                 const data = await res.json();
                 
                 if (data.login_activity) {

@@ -580,7 +580,7 @@ async function saveSettings() {
             organization: document.getElementById('organization').value
         };
 
-        const response = await fetch('https://cloudoptima-api.onrender.com/api/user/settings', {
+        const response = await fetch('https://cloudoptima-api-python.onrender.com/api/user/settings', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(settings)
@@ -625,7 +625,7 @@ async function loadSettings() {
     const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
     if (currentUser.email) {
         try {
-            const response = await fetch(`https://cloudoptima-api.onrender.com/api/user/settings?userId=${currentUser.email}`);
+            const response = await fetch(`https://cloudoptima-api-python.onrender.com/api/user/settings?userId=${currentUser.email}`);
             const data = await response.json();
             
             if (data && !data.error) {
@@ -683,7 +683,7 @@ function deleteAccount() {
             localStorage.setItem('users', JSON.stringify(users));
             
             // Also delete from backend
-            fetch('https://cloudoptima-api.onrender.com/api/user/delete', {
+            fetch('https://cloudoptima-api-python.onrender.com/api/user/delete', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email: currentUser.email })
