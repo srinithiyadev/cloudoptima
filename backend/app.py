@@ -5,31 +5,19 @@ from aws_api import aws_bp
 from routes.test_email import test_bp
 from simulated_cloud import simulated_bp
 import os
-import pymysql
-import pymysql.cursors
+import psycopg2
+import psycopg2.extras
 import sys
 import traceback
+from datetime import datetime
 
-# Database configuration from environment variables
-DB_CONFIG = {
-    'host': os.getenv('DB_HOST', 'localhost'),
-    'user': os.getenv('DB_USER', 'root'),
-    'password': os.getenv('DB_PASSWORD', 'CloudOptima2026!'),
-    'database': os.getenv('DB_NAME', 'cloudoptima'),
-    'port': int(os.getenv('DB_PORT', 3306))
-}
+# Database connection using single URL
+DATABASE_URL = os.getenv('DATABASE_URL')
 
 def get_db_connection():
     try:
-        conn = pymysql.connect(
-            host=DB_CONFIG['host'],
-            user=DB_CONFIG['user'],
-            password=DB_CONFIG['password'],
-            database=DB_CONFIG['database'],
-            port=DB_CONFIG['port'],
-            cursorclass=pymysql.cursors.DictCursor,
-            connect_timeout=5
-        )
+        conn = psycopg2.connect(DATABASE_URL)
+        conn.cursor_factory = psycopg2.extras.RealDictCursor
         return conn
     except Exception as e:
         print(f"Database connection error: {e}")
@@ -163,7 +151,6 @@ def verify_auth():
 
 @app.route('/api/auth/logout', methods=['POST'])
 def logout():
-    # Optional: log logout time, invalidate token
     return jsonify({'success': True})
 
 @app.route('/api/user/delete', methods=['POST'])
@@ -175,9 +162,7 @@ def delete_user():
     
     cursor = conn.cursor()
     try:
-        # Delete user's alerts first (foreign key)
         cursor.execute("DELETE FROM alerts WHERE user_id IN (SELECT id FROM users WHERE email = %s)", (data['email'],))
-        # Delete user
         cursor.execute("DELETE FROM users WHERE email = %s", (data['email'],))
         conn.commit()
         return jsonify({'success': True})
@@ -195,190 +180,7 @@ def save_user_settings():
         return jsonify({'success': False, 'error': 'Database connection failed'}), 500
     
     cursor = conn.cursor()
-# ========== ADMIN ENDPOINTS ==========
-@app.route('/api/admin/users', methods=['GET'])
-def get_all_users():
-    """Get all registered users (admin only)"""
-    conn = get_db_connection()
-    if not conn:
-        return jsonify({'error': 'Database connection failed'}), 500
-    
-    cursor = conn.cursor()
     try:
-        cursor.execute("""
-            SELECT 
-                u.id, 
-                u.email, 
-                u.name, 
-                u.created_at,
-                COUNT(a.id) as settings_count,
-                (
-                    SELECT COUNT(*) 
-                    FROM alerts 
-                    WHERE user_id = u.id AND enabled = 1
-                ) as active_alerts
-            FROM users u
-            LEFT JOIN alerts a ON u.id = a.user_id
-            GROUP BY u.id
-            ORDER BY u.created_at DESC
-        """)
-        users = cursor.fetchall()
-        
-        # Get recent activity (last 7 days)
-        for user in users:
-            cursor.execute("""
-                SELECT created_at as login_time
-                FROM user_activity
-                WHERE user_id = %s AND activity_type = 'login'
-                ORDER BY created_at DESC
-                LIMIT 5
-            """, (user['id'],))
-            user['recent_logins'] = cursor.fetchall()
-        
-        return jsonify({
-            'users': users,
-            'total': len(users),
-            'timestamp': datetime.now().isoformat()
-        })
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-    finally:
-        conn.close()
-
-@app.route('/api/admin/user/<int:user_id>', methods=['GET'])
-def get_user_details(user_id):
-    """Get detailed info for specific user"""
-    conn = get_db_connection()
-    if not conn:
-        return jsonify({'error': 'Database connection failed'}), 500
-    
-    cursor = conn.cursor()
-    try:
-        # User basic info
-        cursor.execute("""
-            SELECT id, email, name, created_at
-            FROM users
-            WHERE id = %s
-        """, (user_id,))
-        user = cursor.fetchone()
-        
-        if not user:
-            return jsonify({'error': 'User not found'}), 404
-        
-        # User settings
-        cursor.execute("SELECT * FROM alerts WHERE user_id = %s", (user_id,))
-        user['settings'] = cursor.fetchone()
-        
-        # Login activity
-        cursor.execute("""
-            SELECT created_at as login_time, ip_address, user_agent
-            FROM user_activity
-            WHERE user_id = %s AND activity_type = 'login'
-            ORDER BY created_at DESC
-            LIMIT 20
-        """, (user_id,))
-        user['login_history'] = cursor.fetchall()
-        
-        return jsonify(user)
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-    finally:
-        conn.close()
-
-@app.route('/api/admin/stats', methods=['GET'])
-def get_admin_stats():
-    """Get overall platform statistics"""
-    conn = get_db_connection()
-    if not conn:
-        return jsonify({'error': 'Database connection failed'}), 500
-    
-    cursor = conn.cursor()
-    try:
-        # Total users
-        cursor.execute("SELECT COUNT(*) as total FROM users")
-        total_users = cursor.fetchone()['total']
-        
-        # New users today
-        cursor.execute("""
-            SELECT COUNT(*) as count 
-            FROM users 
-            WHERE DATE(created_at) = CURDATE()
-        """)
-        new_today = cursor.fetchone()['count']
-        
-        # Active users (last 7 days)
-        cursor.execute("""
-            SELECT COUNT(DISTINCT user_id) as count
-            FROM user_activity
-            WHERE activity_type = 'login'
-            AND created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
-        """)
-        active_7d = cursor.fetchone()['count']
-        
-        # Users with alerts enabled
-        cursor.execute("""
-            SELECT COUNT(DISTINCT user_id) as count
-            FROM alerts
-            WHERE enabled = 1
-        """)
-        alerts_enabled = cursor.fetchone()['count']
-        
-        # Login activity by day (last 30 days)
-        cursor.execute("""
-            SELECT 
-                DATE(created_at) as date,
-                COUNT(*) as login_count
-            FROM user_activity
-            WHERE activity_type = 'login'
-            AND created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
-            GROUP BY DATE(created_at)
-            ORDER BY date DESC
-        """)
-        login_activity = cursor.fetchall()
-        
-        return jsonify({
-            'total_users': total_users,
-            'new_users_today': new_today,
-            'active_users_last_7d': active_7d,
-            'users_with_alerts': alerts_enabled,
-            'login_activity': login_activity,
-            'timestamp': datetime.now().isoformat()
-        })
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-    finally:
-        conn.close()
-
-# ========== USER ACTIVITY TRACKING ==========
-@app.route('/api/track/login', methods=['POST'])
-def track_login():
-    """Track user login activity"""
-    data = request.json
-    conn = get_db_connection()
-    if not conn:
-        return jsonify({'success': False}), 500
-    
-    cursor = conn.cursor()
-    try:
-        # Get user id from email
-        cursor.execute("SELECT id FROM users WHERE email = %s", (data['email'],))
-        user = cursor.fetchone()
-        
-        if user:
-            cursor.execute("""
-                INSERT INTO user_activity (user_id, activity_type, ip_address, user_agent, created_at)
-                VALUES (%s, 'login', %s, %s, NOW())
-            """, (user['id'], request.remote_addr, request.headers.get('User-Agent')))
-            conn.commit()
-        
-        return jsonify({'success': True})
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 500
-    finally:
-        conn.close()
-    
-    try:
-        # Get user id from email
         cursor.execute("SELECT id FROM users WHERE email = %s", (data['userId'],))
         user = cursor.fetchone()
         if not user:
@@ -386,7 +188,6 @@ def track_login():
         
         user_id = user['id']
         
-        # Check if settings exist
         cursor.execute("SELECT * FROM alerts WHERE user_id = %s", (user_id,))
         existing = cursor.fetchone()
         
@@ -442,7 +243,6 @@ def get_user_settings():
     
     cursor = conn.cursor()
     try:
-        # Get user id from email
         cursor.execute("SELECT id FROM users WHERE email = %s", (user_id,))
         user = cursor.fetchone()
         if not user:
@@ -452,7 +252,6 @@ def get_user_settings():
         settings = cursor.fetchone()
         
         if settings:
-            # Map database columns to frontend expected names
             return jsonify({
                 'alertEmail': settings.get('alert_email'),
                 'scanFrequency': settings.get('frequency'),
@@ -478,6 +277,173 @@ def get_user_settings():
     finally:
         conn.close()
 
+# ========== ADMIN ENDPOINTS ==========
+@app.route('/api/admin/users', methods=['GET'])
+def get_all_users():
+    conn = get_db_connection()
+    if not conn:
+        return jsonify({'error': 'Database connection failed'}), 500
+    
+    cursor = conn.cursor()
+    try:
+        cursor.execute("""
+            SELECT 
+                u.id, 
+                u.email, 
+                u.name, 
+                u.created_at,
+                COUNT(a.id) as settings_count,
+                (
+                    SELECT COUNT(*) 
+                    FROM alerts 
+                    WHERE user_id = u.id AND enabled = true
+                ) as active_alerts
+            FROM users u
+            LEFT JOIN alerts a ON u.id = a.user_id
+            GROUP BY u.id
+            ORDER BY u.created_at DESC
+        """)
+        users = cursor.fetchall()
+        
+        for user in users:
+            cursor.execute("""
+                SELECT created_at as login_time
+                FROM user_activity
+                WHERE user_id = %s AND activity_type = 'login'
+                ORDER BY created_at DESC
+                LIMIT 5
+            """, (user['id'],))
+            user['recent_logins'] = cursor.fetchall()
+        
+        return jsonify({
+            'users': users,
+            'total': len(users),
+            'timestamp': datetime.now().isoformat()
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
+
+@app.route('/api/admin/user/<int:user_id>', methods=['GET'])
+def get_user_details(user_id):
+    conn = get_db_connection()
+    if not conn:
+        return jsonify({'error': 'Database connection failed'}), 500
+    
+    cursor = conn.cursor()
+    try:
+        cursor.execute("""
+            SELECT id, email, name, created_at
+            FROM users
+            WHERE id = %s
+        """, (user_id,))
+        user = cursor.fetchone()
+        
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
+        cursor.execute("SELECT * FROM alerts WHERE user_id = %s", (user_id,))
+        user['settings'] = cursor.fetchone()
+        
+        cursor.execute("""
+            SELECT created_at as login_time
+            FROM user_activity
+            WHERE user_id = %s AND activity_type = 'login'
+            ORDER BY created_at DESC
+            LIMIT 20
+        """, (user_id,))
+        user['login_history'] = cursor.fetchall()
+        
+        return jsonify(user)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
+
+@app.route('/api/admin/stats', methods=['GET'])
+def get_admin_stats():
+    conn = get_db_connection()
+    if not conn:
+        return jsonify({'error': 'Database connection failed'}), 500
+    
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT COUNT(*) as total FROM users")
+        total_users = cursor.fetchone()['total']
+        
+        cursor.execute("""
+            SELECT COUNT(*) as count 
+            FROM users 
+            WHERE DATE(created_at) = CURRENT_DATE
+        """)
+        new_today = cursor.fetchone()['count']
+        
+        cursor.execute("""
+            SELECT COUNT(DISTINCT user_id) as count
+            FROM user_activity
+            WHERE activity_type = 'login'
+            AND created_at >= NOW() - INTERVAL '7 days'
+        """)
+        active_7d = cursor.fetchone()['count']
+        
+        cursor.execute("""
+            SELECT COUNT(DISTINCT user_id) as count
+            FROM alerts
+            WHERE enabled = true
+        """)
+        alerts_enabled = cursor.fetchone()['count']
+        
+        cursor.execute("""
+            SELECT 
+                DATE(created_at) as date,
+                COUNT(*) as login_count
+            FROM user_activity
+            WHERE activity_type = 'login'
+            AND created_at >= NOW() - INTERVAL '30 days'
+            GROUP BY DATE(created_at)
+            ORDER BY date DESC
+        """)
+        login_activity = cursor.fetchall()
+        
+        return jsonify({
+            'total_users': total_users,
+            'new_users_today': new_today or 0,
+            'active_users_last_7d': active_7d or 0,
+            'users_with_alerts': alerts_enabled or 0,
+            'login_activity': login_activity,
+            'timestamp': datetime.now().isoformat()
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
+
+@app.route('/api/track/login', methods=['POST'])
+def track_login():
+    data = request.json
+    conn = get_db_connection()
+    if not conn:
+        return jsonify({'success': False}), 500
+    
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT id FROM users WHERE email = %s", (data['email'],))
+        user = cursor.fetchone()
+        
+        if user:
+            cursor.execute("""
+                INSERT INTO user_activity (user_id, activity_type, ip_address, user_agent, created_at)
+                VALUES (%s, 'login', %s, %s, NOW())
+            """, (user['id'], request.remote_addr, request.headers.get('User-Agent')))
+            conn.commit()
+        
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+    finally:
+        conn.close()
+
 # Register blueprints
 app.register_blueprint(aws_bp, url_prefix='/api/aws')
 app.register_blueprint(alert_bp, url_prefix='/api/alert')
@@ -497,6 +463,9 @@ def home():
             '/api/auth/logout',
             '/api/user/delete',
             '/api/user/settings',
+            '/api/admin/users',
+            '/api/admin/user/<id>',
+            '/api/admin/stats',
             '/api/aws/*',
             '/api/alert/*',
             '/api/simulated/*'
