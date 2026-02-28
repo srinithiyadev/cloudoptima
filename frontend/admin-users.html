@@ -1,157 +1,220 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Management - Admin</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>Users - CloudOptima Admin</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Inter', sans-serif;
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+        body { background: #f0f2f5; display: flex; }
+        
+        .sidebar {
+            width: 250px; background: #1a1c2e; color: white; padding: 20px; height: 100vh;
+            position: fixed;
         }
-        body {
-            background: #f1f5f9;
+        .main-content { margin-left: 250px; padding: 20px; width: 100%; }
+        
+        .nav-link {
+            display: block; padding: 12px; color: #a0a8c0; text-decoration: none; border-radius: 8px;
+            margin: 5px 0;
         }
-        .admin-header {
-            background: #0f172a;
-            color: white;
-            padding: 16px 32px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        .nav-link:hover, .nav-link.active { background: #2d2f3f; color: white; }
+        
+        .top-bar {
+            background: white; padding: 15px 20px; border-radius: 10px; margin-bottom: 20px;
+            display: flex; justify-content: space-between;
         }
-        .main-content {
-            max-width: 1200px;
-            margin: 30px auto;
-            padding: 0 24px;
+        
+        .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
+        .stat-card {
+            background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
-        .user-card {
-            background: white;
-            border-radius: 12px;
-            padding: 24px;
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        
+        .search-bar {
+            display: flex; gap: 10px; margin-bottom: 20px;
+            background: white; padding: 15px; border-radius: 10px;
         }
-        .user-info h3 {
-            color: #0f172a;
+        .search-bar input {
+            flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 6px;
         }
-        .user-info p {
-            color: #64748b;
-            margin-top: 5px;
+        .btn {
+            padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer;
+            background: #667eea; color: white;
         }
-        .user-actions button {
-            padding: 8px 16px;
-            margin-left: 10px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
+        
+        table {
+            width: 100%; background: white; border-radius: 10px; overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
-        .btn-view { background: #3b82f6; color: white; }
-        .btn-disable { background: #f59e0b; color: white; }
-        .btn-delete { background: #ef4444; color: white; }
-        .search-box {
-            margin-bottom: 20px;
-            display: flex;
-            gap: 10px;
+        th { background: #f8f9fa; padding: 12px; text-align: left; }
+        td { padding: 12px; border-bottom: 1px solid #eee; }
+        .badge {
+            padding: 4px 8px; border-radius: 12px; font-size: 12px;
         }
-        .search-box input {
-            flex: 1;
-            padding: 12px;
-            border: 2px solid #e2e8f0;
-            border-radius: 8px;
+        .badge.active { background: #dcfce7; color: #16a34a; }
+        .badge.admin { background: #e8f0fe; color: #3b82f6; }
+        
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); align-items: center; justify-content: center;
         }
-        .back-link {
-            margin-bottom: 20px;
-        }
-        .back-link a {
-            color: #3b82f6;
-            text-decoration: none;
+        .modal-content {
+            background: white; padding: 30px; border-radius: 10px; width: 400px;
         }
     </style>
 </head>
 <body>
-    <div class="admin-header">
-        <h2><i class="fas fa-users-cog"></i> User Management</h2>
-        <button onclick="logout()" style="background: #ef4444; color: white; border: none; padding: 8px 20px; border-radius: 8px;">Logout</button>
+    <div class="sidebar">
+        <h3 style="margin-bottom: 30px;">Cloud<span style="color: #667eea;">Optima</span></h3>
+        <a href="admin-dashboard.html" class="nav-link">📊 Dashboard</a>
+        <a href="admin-users.html" class="nav-link active">👥 Users</a>
+        <a href="admin-logs.html" class="nav-link">📋 Logs</a>
+        <a href="admin-errors.html" class="nav-link">⚠️ Errors</a>
+        <a href="admin-settings.html" class="nav-link">⚙️ Settings</a>
     </div>
 
     <div class="main-content">
-        <div class="back-link">
-            <a href="admin-dashboard.html">← Back to Dashboard</a>
+        <div class="top-bar">
+            <h2>User Management</h2>
+            <div>
+                <span id="adminDisplay">Admin</span>
+                <button onclick="logout()" style="margin-left: 15px; padding: 5px 10px;">Logout</button>
+            </div>
         </div>
 
-        <div class="search-box">
-            <input type="text" id="searchInput" placeholder="Search users by email...">
-            <button onclick="searchUsers()" style="background: #3b82f6; color: white; border: none; padding: 12px 24px; border-radius: 8px;">Search</button>
+        <div class="stats" id="userStats">
+            <div class="stat-card"><span id="totalUsers">0</span><br>Total Users</div>
+            <div class="stat-card"><span id="activeUsers">0</span><br>Active</div>
+            <div class="stat-card"><span id="alertUsers">0</span><br>With Alerts</div>
+            <div class="stat-card"><span id="adminCount">0</span><br>Admins</div>
         </div>
 
-        <div id="usersList">
-            <!-- Users will be listed here -->
+        <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="Search users..." onkeyup="searchUsers()">
+            <button class="btn" onclick="openAddModal()">+ Add User</button>
+        </div>
+
+        <table>
+            <thead>
+                <tr><th>User</th><th>Email</th><th>Role</th><th>Status</th><th>Joined</th><th>Actions</th></tr>
+            </thead>
+            <tbody id="usersList">
+                <tr><td colspan="6">Loading...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Add/Edit Modal -->
+    <div class="modal" id="userModal">
+        <div class="modal-content">
+            <h3 id="modalTitle">Add User</h3>
+            <input type="text" id="userName" placeholder="Name" style="width:100%; margin:10px 0; padding:8px;">
+            <input type="email" id="userEmail" placeholder="Email" style="width:100%; margin:10px 0; padding:8px;">
+            <input type="password" id="userPassword" placeholder="Password" style="width:100%; margin:10px 0; padding:8px;">
+            <select id="userRole" style="width:100%; margin:10px 0; padding:8px;">
+                <option value="user">User</option>
+                <option value="admin">Admin</option>
+            </select>
+            <div style="text-align:right; margin-top:20px;">
+                <button onclick="closeModal()" style="padding:8px 15px; margin-right:10px;">Cancel</button>
+                <button onclick="saveUser()" class="btn">Save</button>
+            </div>
         </div>
     </div>
 
     <script>
-        const users = [
-            { email: 'alice@example.com', name: 'Alice', joined: '2026-02-15', status: 'active', clouds: ['AWS'] },
-            { email: 'bob@example.com', name: 'Bob', joined: '2026-02-14', status: 'active', clouds: ['AWS', 'Azure'] },
-            { email: 'charlie@example.com', name: 'Charlie', joined: '2026-02-10', status: 'inactive', clouds: [] },
-            { email: 'david@example.com', name: 'David', joined: '2026-02-17', status: 'active', clouds: ['GCP'] },
-            { email: 'eve@example.com', name: 'Eve', joined: '2026-02-16', status: 'active', clouds: ['AWS', 'GCP'] }
-        ];
+        let users = [];
 
-        function displayUsers(filteredUsers = users) {
-            const container = document.getElementById('usersList');
-            container.innerHTML = '';
-            
-            filteredUsers.forEach(user => {
-                container.innerHTML += `
-                    <div class="user-card">
-                        <div class="user-info">
-                            <h3>${user.email}</h3>
-                            <p>Joined: ${user.joined} · Status: ${user.status} · Connected: ${user.clouds.join(', ') || 'None'}</p>
-                        </div>
-                        <div class="user-actions">
-                            <button class="btn-view" onclick="viewUser('${user.email}')"><i class="fas fa-eye"></i> View</button>
-                            <button class="btn-disable" onclick="toggleUser('${user.email}')"><i class="fas fa-ban"></i> Disable</button>
-                            <button class="btn-delete" onclick="deleteUser('${user.email}')"><i class="fas fa-trash"></i> Delete</button>
-                        </div>
-                    </div>
-                `;
-            });
+        // Load users
+        async function loadUsers() {
+            try {
+                const res = await fetch('https://cloudoptima-api.onrender.com/api/admin/users');
+                const data = await res.json();
+                users = data.users || [];
+                displayUsers(users);
+                updateStats();
+            } catch (e) {
+                // Demo data
+                users = [
+                    {id:1, email:'john@example.com', name:'John', created_at:'2026-01-15', active_alerts:2},
+                    {id:2, email:'jane@example.com', name:'Jane', created_at:'2026-01-20', active_alerts:0},
+                    {id:3, email:'admin@cloudoptima.com', name:'Admin', created_at:'2026-01-01', active_alerts:0}
+                ];
+                displayUsers(users);
+                updateStats();
+            }
+        }
+
+        function displayUsers(userList) {
+            const tbody = document.getElementById('usersList');
+            if (userList.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6">No users</td></tr>';
+                return;
+            }
+            tbody.innerHTML = userList.map(u => `
+                <tr>
+                    <td>${u.name || 'N/A'}</td>
+                    <td>${u.email}</td>
+                    <td><span class="badge ${u.email.includes('admin') ? 'admin' : ''}">${u.email.includes('admin') ? 'Admin' : 'User'}</span></td>
+                    <td><span class="badge active">Active</span></td>
+                    <td>${new Date(u.created_at).toLocaleDateString()}</td>
+                    <td>
+                        <button onclick="editUser(${u.id})">Edit</button>
+                        <button onclick="deleteUser(${u.id})">Del</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function updateStats() {
+            document.getElementById('totalUsers').textContent = users.length;
+            document.getElementById('activeUsers').textContent = Math.floor(users.length * 0.7);
+            document.getElementById('alertUsers').textContent = users.filter(u => u.active_alerts > 0).length;
+            document.getElementById('adminCount').textContent = users.filter(u => u.email.includes('admin')).length;
         }
 
         function searchUsers() {
-            const search = document.getElementById('searchInput').value.toLowerCase();
-            const filtered = users.filter(u => u.email.toLowerCase().includes(search));
+            const term = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = users.filter(u => u.email.toLowerCase().includes(term) || (u.name && u.name.toLowerCase().includes(term)));
             displayUsers(filtered);
         }
 
-        function viewUser(email) {
-            alert(`Viewing details for ${email}`);
+        function openAddModal() {
+            document.getElementById('modalTitle').textContent = 'Add User';
+            document.getElementById('userModal').style.display = 'flex';
         }
 
-        function toggleUser(email) {
-            alert(`Toggle user ${email} (demo)`);
+        function editUser(id) {
+            const user = users.find(u => u.id === id);
+            if (user) {
+                document.getElementById('userName').value = user.name || '';
+                document.getElementById('userEmail').value = user.email;
+                document.getElementById('modalTitle').textContent = 'Edit User';
+                document.getElementById('userModal').style.display = 'flex';
+            }
         }
 
-        function deleteUser(email) {
-            if(confirm(`Delete ${email}?`)) {
-                alert(`User ${email} deleted`);
+        function closeModal() {
+            document.getElementById('userModal').style.display = 'none';
+        }
+
+        function saveUser() {
+            alert('User saved (demo)');
+            closeModal();
+        }
+
+        function deleteUser(id) {
+            if (confirm('Delete user?')) {
+                users = users.filter(u => u.id !== id);
+                displayUsers(users);
+                updateStats();
             }
         }
 
         function logout() {
-            localStorage.removeItem('admin_logged_in');
-            window.location.replace('admin-login.html');
+            localStorage.removeItem('adminUser');
+            window.location.href = 'admin-login.html';
         }
 
-        displayUsers();
+        loadUsers();
     </script>
 </body>
 </html>

@@ -168,8 +168,8 @@
         </div>
     </div>
 
-    <script>
-    document.getElementById('signupForm').addEventListener('submit', function(e) {
+   <script>
+    document.getElementById('signupForm').addEventListener('submit', async function(e) {
         e.preventDefault();
         
         const name = document.getElementById('fullName').value;
@@ -191,34 +191,72 @@
             return;
         }
 
-        // Get existing users
-        const users = JSON.parse(localStorage.getItem('users') || '[]');
-        
-        // Check if email exists
-        if (users.some(u => u.email === email)) {
+        // Disable button during submission
+        signupBtn.disabled = true;
+        signupBtn.textContent = 'Creating account...';
+
+        try {
+            // Send to backend API
+            const response = await fetch('https://cloudoptima-api.onrender.com/api/auth/signup', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    name: name,
+                    email: email,
+                    password: password
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                // Also save to localStorage for offline demo
+                const users = JSON.parse(localStorage.getItem('users') || '[]');
+                users.push({
+                    id: data.user.id || Date.now(),
+                    name: name,
+                    email: email,
+                    password: password,
+                    created: new Date().toISOString()
+                });
+                localStorage.setItem('users', JSON.stringify(users));
+
+                alertDiv.className = 'alert alert-success';
+                alertDiv.innerHTML = 'Account created! Redirecting to login...';
+                
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 2000);
+            } else {
+                alertDiv.className = 'alert alert-error';
+                alertDiv.innerHTML = data.error || 'Signup failed';
+                signupBtn.disabled = false;
+                signupBtn.textContent = 'Create Account';
+            }
+        } catch (error) {
             alertDiv.className = 'alert alert-error';
-            alertDiv.innerHTML = 'Email already registered';
-            return;
+            alertDiv.innerHTML = 'Network error. Using local storage only.';
+            
+            // Fallback to localStorage only
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            if (users.some(u => u.email === email)) {
+                alertDiv.innerHTML = 'Email already registered (local)';
+            } else {
+                users.push({
+                    id: Date.now(),
+                    name: name,
+                    email: email,
+                    password: password,
+                    created: new Date().toISOString()
+                });
+                localStorage.setItem('users', JSON.stringify(users));
+                alertDiv.innerHTML = 'Account created (offline mode)!';
+                setTimeout(() => window.location.href = 'login.html', 2000);
+            }
+            signupBtn.disabled = false;
+            signupBtn.textContent = 'Create Account';
         }
-        
-        // Add new user
-        users.push({
-            id: Date.now(),
-            name: name,
-            email: email,
-            password: password,
-            created: new Date().toISOString()
-        });
-        
-        localStorage.setItem('users', JSON.stringify(users));
-        
-        alertDiv.className = 'alert alert-success';
-        alertDiv.innerHTML = 'Account created! Redirecting to login...';
-        
-        setTimeout(() => {
-            window.location.href = 'login.html';
-        }, 2000);
     });
-    </script>
-</body>
-</html>
+</script>

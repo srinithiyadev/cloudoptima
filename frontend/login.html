@@ -153,41 +153,102 @@
         </div>
     </div>
 
-    <script>
-    document.getElementById('loginForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
-        const alertDiv = document.getElementById('alertMessage');
-        const loginBtn = document.getElementById('loginBtn');
-        
-        // Get users from localStorage
-        const users = JSON.parse(localStorage.getItem('users') || '[]');
-        
-        // Find user
-        const user = users.find(u => u.email === email && u.password === password);
-        
-        if (user) {
-            // Save current user - THIS IS THE KEY PART
-            localStorage.setItem('currentUser', JSON.stringify({
-                email: user.email,
-                name: user.name || user.email.split('@')[0],
-                loggedIn: true
-            }));
+        <script>
+document.getElementById('loginForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const alertDiv = document.getElementById('alertMessage');
+    const loginBtn = document.getElementById('loginBtn');
+    
+    // Disable button during login
+    loginBtn.disabled = true;
+    loginBtn.textContent = 'Logging in...';
+
+    try {
+        // Try backend first
+        const response = await fetch('https://cloudoptima-api.onrender.com/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+           // Backend login successful
+// Track login activity
+fetch('https://cloudoptima-api.onrender.com/api/track/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: data.user.email })
+}).catch(() => {});  // Don't block login if tracking fails
+
+localStorage.setItem('currentUser', JSON.stringify({
+    email: data.user.email,
+    name: data.user.name || email.split('@')[0],
+    loggedIn: true,
+    token: data.token || 'backend-auth'
+}));
+            // Also ensure user exists in localStorage for offline fallback
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            if (!users.some(u => u.email === email)) {
+                users.push({
+                    email: email,
+                    name: data.user.name || email.split('@')[0],
+                    password: password, // Only stored locally, never sent
+                    created: new Date().toISOString()
+                });
+                localStorage.setItem('users', JSON.stringify(users));
+            }
             
             alertDiv.className = 'alert alert-success';
             alertDiv.innerHTML = 'Login successful! Redirecting...';
             
-            // Force redirect to dashboard
             setTimeout(() => {
                 window.location.href = 'index.html';
             }, 500);
         } else {
-            alertDiv.className = 'alert alert-error';
-            alertDiv.innerHTML = 'Invalid email or password';
+            // Backend failed - fallback to localStorage
+            fallbackLogin(email, password, alertDiv, loginBtn);
         }
-    });
+    } catch (error) {
+        // Network error - use localStorage
+        console.log('Backend unreachable, using local storage');
+        fallbackLogin(email, password, alertDiv, loginBtn);
+    }
+});
+
+function fallbackLogin(email, password, alertDiv, loginBtn) {
+    // Get users from localStorage
+    const users = JSON.parse(localStorage.getItem('users') || '[]');
+    
+    // Find user
+    const user = users.find(u => u.email === email && u.password === password);
+    
+    if (user) {
+        // Save current user
+        localStorage.setItem('currentUser', JSON.stringify({
+            email: user.email,
+            name: user.name || email.split('@')[0],
+            loggedIn: true,
+            mode: 'offline'
+        }));
+        
+        alertDiv.className = 'alert alert-success';
+        alertDiv.innerHTML = 'Login successful (offline mode)! Redirecting...';
+        
+        setTimeout(() => {
+            window.location.href = 'index.html';
+        }, 500);
+    } else {
+        alertDiv.className = 'alert alert-error';
+        alertDiv.innerHTML = 'Invalid email or password';
+        loginBtn.disabled = false;
+        loginBtn.textContent = 'Login';
+    }
+}
 </script>
 </body>
 </html>

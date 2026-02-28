@@ -523,119 +523,181 @@
         <p>© 2026 CloudOptima · Open Source · Free Forever</p>
     </div>
 
-    <script>
-        function logout() {
-            localStorage.clear();
-            window.location.replace('login.html');
+   <script>
+function logout() {
+    localStorage.clear();
+    window.location.replace('login.html');
+}
+
+// Save settings to localStorage AND backend
+async function saveSettings() {
+    // Get current user
+    const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    if (!currentUser.email) {
+        alert('Please login first');
+        return;
+    }
+    
+    // Save all settings to localStorage
+    localStorage.setItem('alertEmail', document.getElementById('alertEmail').value);
+    localStorage.setItem('scanFrequency', document.getElementById('scanFrequency').value);
+    localStorage.setItem('alertSensitivity', document.getElementById('alertSensitivity').value);
+    localStorage.setItem('alertOnIdle', document.getElementById('alertOnIdle').checked);
+    localStorage.setItem('weeklyReport', document.getElementById('weeklyReport').checked);
+    localStorage.setItem('anomalyAlerts', document.getElementById('anomalyAlerts').checked);
+    localStorage.setItem('idleThreshold', document.getElementById('idleThreshold').value);
+    localStorage.setItem('cpuThreshold', document.getElementById('cpuThreshold').value);
+    localStorage.setItem('ignoreTagged', document.getElementById('ignoreTagged').checked);
+    localStorage.setItem('monthlyBudget', document.getElementById('monthlyBudget').value);
+    localStorage.setItem('budgetAlert', document.getElementById('budgetAlert').value);
+    localStorage.setItem('autoStop', document.getElementById('autoStop').checked);
+    localStorage.setItem('showCosts', document.getElementById('showCosts').checked);
+    localStorage.setItem('slackUrl', document.getElementById('slackUrl').value);
+    localStorage.setItem('teamsUrl', document.getElementById('teamsUrl').value);
+    localStorage.setItem('fullName', document.getElementById('fullName').value);
+    localStorage.setItem('organization', document.getElementById('organization').value);
+    
+    // Also save to backend
+    try {
+        const settings = {
+            userId: currentUser.email,
+            alertEmail: document.getElementById('alertEmail').value,
+            scanFrequency: document.getElementById('scanFrequency').value,
+            alertSensitivity: document.getElementById('alertSensitivity').value,
+            alertOnIdle: document.getElementById('alertOnIdle').checked,
+            weeklyReport: document.getElementById('weeklyReport').checked,
+            anomalyAlerts: document.getElementById('anomalyAlerts').checked,
+            idleThreshold: document.getElementById('idleThreshold').value,
+            cpuThreshold: document.getElementById('cpuThreshold').value,
+            ignoreTagged: document.getElementById('ignoreTagged').checked,
+            monthlyBudget: document.getElementById('monthlyBudget').value,
+            budgetAlert: document.getElementById('budgetAlert').value,
+            autoStop: document.getElementById('autoStop').checked,
+            showCosts: document.getElementById('showCosts').checked,
+            slackUrl: document.getElementById('slackUrl').value,
+            teamsUrl: document.getElementById('teamsUrl').value,
+            fullName: document.getElementById('fullName').value,
+            organization: document.getElementById('organization').value
+        };
+
+        const response = await fetch('https://cloudoptima-api.onrender.com/api/user/settings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(settings)
+        });
+
+        const data = await response.json();
+        if (data.success) {
+            alert('✅ Settings saved to browser and cloud!');
+        } else {
+            alert('✅ Settings saved to browser only (cloud sync failed)');
         }
-    // Save settings to localStorage
-    function saveSettings() {
-        // Get current user
-        const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
-        if (!currentUser.email) {
-            alert('Please login first');
-            return;
-        }
-        
-        // Save all settings to localStorage
-        localStorage.setItem('alertEmail', document.getElementById('alertEmail').value);
-        localStorage.setItem('scanFrequency', document.getElementById('scanFrequency').value);
-        localStorage.setItem('alertSensitivity', document.getElementById('alertSensitivity').value);
-        localStorage.setItem('alertOnIdle', document.getElementById('alertOnIdle').checked);
-        localStorage.setItem('weeklyReport', document.getElementById('weeklyReport').checked);
-        localStorage.setItem('anomalyAlerts', document.getElementById('anomalyAlerts').checked);
-        localStorage.setItem('idleThreshold', document.getElementById('idleThreshold').value);
-        localStorage.setItem('cpuThreshold', document.getElementById('cpuThreshold').value);
-        localStorage.setItem('ignoreTagged', document.getElementById('ignoreTagged').checked);
-        localStorage.setItem('monthlyBudget', document.getElementById('monthlyBudget').value);
-        localStorage.setItem('budgetAlert', document.getElementById('budgetAlert').value);
-        localStorage.setItem('autoStop', document.getElementById('autoStop').checked);
-        localStorage.setItem('showCosts', document.getElementById('showCosts').checked);
-        localStorage.setItem('slackUrl', document.getElementById('slackUrl').value);
-        localStorage.setItem('teamsUrl', document.getElementById('teamsUrl').value);
-        localStorage.setItem('fullName', document.getElementById('fullName').value);
-        localStorage.setItem('organization', document.getElementById('organization').value);
-        
-        alert('✅ Settings saved to browser!');
+    } catch (error) {
+        alert('✅ Settings saved to browser (offline mode)');
     }
+}
 
-    // Load settings from localStorage
-    function loadSettings() {
-        document.getElementById('alertEmail').value = localStorage.getItem('alertEmail') || 'student@example.com';
-        document.getElementById('scanFrequency').value = localStorage.getItem('scanFrequency') || '12';
-        document.getElementById('alertSensitivity').value = localStorage.getItem('alertSensitivity') || 'medium';
-        document.getElementById('alertOnIdle').checked = localStorage.getItem('alertOnIdle') !== 'false';
-        document.getElementById('weeklyReport').checked = localStorage.getItem('weeklyReport') !== 'false';
-        document.getElementById('anomalyAlerts').checked = localStorage.getItem('anomalyAlerts') !== 'false';
-        document.getElementById('idleThreshold').value = localStorage.getItem('idleThreshold') || '14';
-        document.getElementById('cpuThreshold').value = localStorage.getItem('cpuThreshold') || '5';
-        document.getElementById('ignoreTagged').checked = localStorage.getItem('ignoreTagged') !== 'false';
-        document.getElementById('monthlyBudget').value = localStorage.getItem('monthlyBudget') || '1000';
-        document.getElementById('budgetAlert').value = localStorage.getItem('budgetAlert') || '75';
-        document.getElementById('autoStop').checked = localStorage.getItem('autoStop') === 'true';
-        document.getElementById('showCosts').checked = localStorage.getItem('showCosts') !== 'false';
-        document.getElementById('slackUrl').value = localStorage.getItem('slackUrl') || '';
-        document.getElementById('teamsUrl').value = localStorage.getItem('teamsUrl') || '';
-        document.getElementById('fullName').value = localStorage.getItem('fullName') || 'Student User';
-        document.getElementById('organization').value = localStorage.getItem('organization') || 'CloudOptima Demo';
-        
-        // Update CPU value display
-        document.getElementById('cpuValue').textContent = document.getElementById('cpuThreshold').value + '%';
-    }
+// Load settings from localStorage AND backend
+async function loadSettings() {
+    // Load from localStorage first (immediate)
+    document.getElementById('alertEmail').value = localStorage.getItem('alertEmail') || 'student@example.com';
+    document.getElementById('scanFrequency').value = localStorage.getItem('scanFrequency') || '12';
+    document.getElementById('alertSensitivity').value = localStorage.getItem('alertSensitivity') || 'medium';
+    document.getElementById('alertOnIdle').checked = localStorage.getItem('alertOnIdle') !== 'false';
+    document.getElementById('weeklyReport').checked = localStorage.getItem('weeklyReport') !== 'false';
+    document.getElementById('anomalyAlerts').checked = localStorage.getItem('anomalyAlerts') !== 'false';
+    document.getElementById('idleThreshold').value = localStorage.getItem('idleThreshold') || '14';
+    document.getElementById('cpuThreshold').value = localStorage.getItem('cpuThreshold') || '5';
+    document.getElementById('ignoreTagged').checked = localStorage.getItem('ignoreTagged') !== 'false';
+    document.getElementById('monthlyBudget').value = localStorage.getItem('monthlyBudget') || '1000';
+    document.getElementById('budgetAlert').value = localStorage.getItem('budgetAlert') || '75';
+    document.getElementById('autoStop').checked = localStorage.getItem('autoStop') === 'true';
+    document.getElementById('showCosts').checked = localStorage.getItem('showCosts') !== 'false';
+    document.getElementById('slackUrl').value = localStorage.getItem('slackUrl') || '';
+    document.getElementById('teamsUrl').value = localStorage.getItem('teamsUrl') || '';
+    document.getElementById('fullName').value = localStorage.getItem('fullName') || 'Student User';
+    document.getElementById('organization').value = localStorage.getItem('organization') || 'CloudOptima Demo';
+    
+    // Update CPU value display
+    document.getElementById('cpuValue').textContent = document.getElementById('cpuThreshold').value + '%';
 
-    // CPU slider live update
-    document.getElementById('cpuThreshold').addEventListener('input', function(e) {
-        document.getElementById('cpuValue').textContent = e.target.value + '%';
-    });
-
-    function testIntegration() {
-        alert('🔔 Test alert sent to configured channels (demo)');
-    }
-
-    function resetToDefault() {
-        if(confirm('Reset all settings to default?')) {
-            // Clear all settings from localStorage
-            const keysToRemove = [
-                'alertEmail', 'scanFrequency', 'alertSensitivity', 'alertOnIdle',
-                'weeklyReport', 'anomalyAlerts', 'idleThreshold', 'cpuThreshold',
-                'ignoreTagged', 'monthlyBudget', 'budgetAlert', 'autoStop',
-                'showCosts', 'slackUrl', 'teamsUrl', 'fullName', 'organization'
-            ];
-            keysToRemove.forEach(key => localStorage.removeItem(key));
-            location.reload();
-        }
-    }
-
-    function resetData() {
-        if(confirm('Reset all cloud data? (Demo only)')) {
-            // Clear everything but keep users
-            const users = localStorage.getItem('users');
-            const currentUser = localStorage.getItem('currentUser');
-            localStorage.clear();
-            if (users) localStorage.setItem('users', users);
-            if (currentUser) localStorage.setItem('currentUser', currentUser);
-            alert('Data reset. Page will reload.');
-            location.reload();
-        }
-    }
-
-    function deleteAccount() {
-        if(confirm('Are you sure? This cannot be undone.')) {
-            // Remove current user from users list
-            const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
-            if (currentUser.email) {
-                let users = JSON.parse(localStorage.getItem('users') || '[]');
-                users = users.filter(u => u.email !== currentUser.email);
-                localStorage.setItem('users', JSON.stringify(users));
+    // Try to load from backend (overwrites if newer)
+    const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    if (currentUser.email) {
+        try {
+            const response = await fetch(`https://cloudoptima-api.onrender.com/api/user/settings?userId=${currentUser.email}`);
+            const data = await response.json();
+            
+            if (data && !data.error) {
+                document.getElementById('alertEmail').value = data.alertEmail || document.getElementById('alertEmail').value;
+                document.getElementById('scanFrequency').value = data.frequency || document.getElementById('scanFrequency').value;
+                document.getElementById('alertOnIdle').checked = data.enabled !== undefined ? data.enabled : document.getElementById('alertOnIdle').checked;
+                // Add more fields as they exist in your backend
             }
-            localStorage.removeItem('currentUser');
-            alert('Account deleted. Redirecting to login...');
-            window.location.href = 'login.html';
+        } catch (error) {
+            console.log('Using localStorage settings only');
         }
     }
+}
 
-    // Load settings on page load
-    document.addEventListener('DOMContentLoaded', loadSettings);
-    </script>
+// CPU slider live update
+document.getElementById('cpuThreshold').addEventListener('input', function(e) {
+    document.getElementById('cpuValue').textContent = e.target.value + '%';
+});
+
+function testIntegration() {
+    alert('🔔 Test alert sent to configured channels (demo)');
+}
+
+function resetToDefault() {
+    if(confirm('Reset all settings to default?')) {
+        const keysToRemove = [
+            'alertEmail', 'scanFrequency', 'alertSensitivity', 'alertOnIdle',
+            'weeklyReport', 'anomalyAlerts', 'idleThreshold', 'cpuThreshold',
+            'ignoreTagged', 'monthlyBudget', 'budgetAlert', 'autoStop',
+            'showCosts', 'slackUrl', 'teamsUrl', 'fullName', 'organization'
+        ];
+        keysToRemove.forEach(key => localStorage.removeItem(key));
+        location.reload();
+    }
+}
+
+function resetData() {
+    if(confirm('Reset all cloud data? (Demo only)')) {
+        const users = localStorage.getItem('users');
+        const currentUser = localStorage.getItem('currentUser');
+        localStorage.clear();
+        if (users) localStorage.setItem('users', users);
+        if (currentUser) localStorage.setItem('currentUser', currentUser);
+        alert('Data reset. Page will reload.');
+        location.reload();
+    }
+}
+
+function deleteAccount() {
+    if(confirm('Are you sure? This cannot be undone.')) {
+        const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+        if (currentUser.email) {
+            let users = JSON.parse(localStorage.getItem('users') || '[]');
+            users = users.filter(u => u.email !== currentUser.email);
+            localStorage.setItem('users', JSON.stringify(users));
+            
+            // Also delete from backend
+            fetch('https://cloudoptima-api.onrender.com/api/user/delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: currentUser.email })
+            }).catch(() => {});
+        }
+        localStorage.removeItem('currentUser');
+        alert('Account deleted. Redirecting to login...');
+        window.location.href = 'login.html';
+    }
+}
+
+// Load settings on page load
+document.addEventListener('DOMContentLoaded', loadSettings);
+</script>
+    
 </body>
 </html>

@@ -534,20 +534,48 @@
     </div>
 
     <script>
-        // Auth check
-        (function() {
-            const token = localStorage.getItem('token');
-            if (!token) window.location.replace('login.html');
-            try {
-                const user = JSON.parse(localStorage.getItem('user') || '{}');
-                document.getElementById('userEmailText').textContent = user.email || 'User';
-            } catch (e) {}
-        })();
+    
+// Auth check with page state preservation
+(async function() {
+    const currentUser = localStorage.getItem('currentUser');
+    
+    if (!currentUser) {
+        window.location.replace('login.html');
+        return;
+    }
 
-        function logout() {
-            localStorage.clear();
+    try {
+        const user = JSON.parse(currentUser);
+        
+        // Optional: Verify with backend
+        const response = await fetch('https://cloudoptima-api.onrender.com/api/auth/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: user.email })
+        });
+
+        if (response.ok) {
+            document.getElementById('userEmailText').textContent = user.email || 'User';
+        } else {
+            // Still allow access but show warning
+            console.warn('Session expired, using local mode');
+            document.getElementById('userEmailText').textContent = user.email || 'User';
+        }
+    } catch (error) {
+        // Backend offline - use localStorage only
+        try {
+            const user = JSON.parse(currentUser);
+            document.getElementById('userEmailText').textContent = user.email || 'User';
+        } catch (e) {
             window.location.replace('login.html');
         }
+    }
+})();
+
+function logout() {
+    localStorage.removeItem('currentUser');
+    window.location.replace('login.html');
+}
 
         // Azure Mock Data
         const azureInstances = [

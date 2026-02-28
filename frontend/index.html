@@ -650,28 +650,66 @@
     </div>
 
     <script>
-       // Auth check - use currentUser (match with login page)
-(function() {
+        
+// Auth check with backend verification
+(async function() {
     const currentUser = localStorage.getItem('currentUser');
+    
     if (!currentUser) {
         window.location.replace('login.html');
         return;
     }
+
     try {
         const user = JSON.parse(currentUser);
-        if (!user.loggedIn) {
-            window.location.replace('login.html');
-            return;
+        
+        // Verify with backend
+        const response = await fetch('https://cloudoptima-api.onrender.com/api/auth/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                email: user.email,
+                loggedIn: user.loggedIn 
+            })
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            document.getElementById('userEmailText').textContent = user.email || 'student@example.com';
+            document.getElementById('userName').textContent = user.email ? user.email.split('@')[0] : 'Optimizer';
+        } else {
+            // Backend says invalid - use local only
+            console.warn('Using offline mode');
+            document.getElementById('userEmailText').textContent = user.email || 'student@example.com';
+            document.getElementById('userName').textContent = user.email ? user.email.split('@')[0] : 'Optimizer';
         }
-        document.getElementById('userEmailText').textContent = user.email || 'student@example.com';
-        document.getElementById('userName').textContent = user.email ? user.email.split('@')[0] : 'Optimizer';
-    } catch (e) {
-        window.location.replace('login.html');
+    } catch (error) {
+        // Backend unreachable - use localStorage only
+        console.log('Offline mode: ' + error.message);
+        try {
+            const user = JSON.parse(currentUser);
+            if (!user.loggedIn) {
+                window.location.replace('login.html');
+                return;
+            }
+            document.getElementById('userEmailText').textContent = user.email || 'student@example.com';
+            document.getElementById('userName').textContent = user.email ? user.email.split('@')[0] : 'Optimizer';
+        } catch (e) {
+            window.location.replace('login.html');
+        }
     }
 })();
 
 function logout() {
-    localStorage.removeItem('currentUser');  // Only remove currentUser, not everything
+    // Notify backend
+    const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    fetch('https://cloudoptima-api.onrender.com/api/auth/logout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: user.email })
+    }).catch(() => {});
+    
+    localStorage.removeItem('currentUser');
     window.location.replace('login.html');
 }
 

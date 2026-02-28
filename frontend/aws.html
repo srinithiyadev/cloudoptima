@@ -558,23 +558,60 @@
     </div>
 
 <script>
-    // ===== AUTH CHECK (localStorage version) =====
-    (function() {
-        const currentUser = localStorage.getItem('currentUser');
-        if (!currentUser) {
-            window.location.replace('login.html');
-            return;
+// ===== AUTH CHECK (with backend verification) =====
+(async function() {
+    const currentUser = localStorage.getItem('currentUser');
+    
+    if (!currentUser) {
+        window.location.replace('login.html');
+        return;
+    }
+
+    try {
+        const user = JSON.parse(currentUser);
+        
+        // Verify with backend that session is still valid
+        const response = await fetch('https://cloudoptima-api.onrender.com/api/auth/verify', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                email: user.email,
+                token: user.token || 'local-only'
+            })
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            document.getElementById('userEmailText').textContent = user.email || 'User';
+        } else {
+            // Backend verification failed
+            console.warn('Session expired, using local only');
+            document.getElementById('userEmailText').textContent = user.email || 'User';
+            // Optionally show banner: "Running in offline mode"
         }
+    } catch (error) {
+        // Backend unreachable - continue with localStorage only
+        console.log('Offline mode: using local storage only');
         try {
             const user = JSON.parse(currentUser);
             document.getElementById('userEmailText').textContent = user.email || 'User';
         } catch (e) {}
-    })();
-
-    function logout() {
-        localStorage.removeItem('currentUser');
-        window.location.replace('login.html');
     }
+})();
+
+function logout() {
+    // Optional: notify backend
+    fetch('https://cloudoptima-api.onrender.com/api/auth/logout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: JSON.parse(localStorage.getItem('currentUser') || '{}').email })
+    }).catch(() => {}); // Ignore errors
+    
+    localStorage.removeItem('currentUser');
+    window.location.replace('login.html');
+}
 
     // ===== AWS DIRECT CONNECTION (No Backend Needed) =====
     async function connectAWS() {

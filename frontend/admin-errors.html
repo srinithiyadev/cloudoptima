@@ -1,125 +1,210 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Error Logs - Admin</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>Error Monitor - CloudOptima Admin</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Inter', sans-serif;
-        }
-        body {
-            background: #f1f5f9;
-            display: flex;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+        body { background: #f0f2f5; display: flex; }
+        
         .sidebar {
-            width: 260px;
-            background: #0f172a;
-            color: white;
-            height: 100vh;
+            width: 250px; background: #1a1c2e; color: white; padding: 20px; height: 100vh;
             position: fixed;
-            padding: 20px 0;
         }
-        .sidebar-header {
-            padding: 20px;
-            border-bottom: 1px solid #334155;
+        .main-content { margin-left: 250px; padding: 20px; width: 100%; }
+        
+        .nav-link {
+            display: block; padding: 12px; color: #a0a8c0; text-decoration: none; border-radius: 8px;
+            margin: 5px 0;
         }
-        .main-content {
-            margin-left: 260px;
-            flex: 1;
-            padding: 24px;
+        .nav-link:hover, .nav-link.active { background: #2d2f3f; color: white; }
+        
+        .top-bar {
+            background: white; padding: 15px 20px; border-radius: 10px; margin-bottom: 20px;
+            display: flex; justify-content: space-between;
         }
-        .header {
-            background: white;
-            padding: 16px 24px;
-            border-radius: 12px;
-            margin-bottom: 24px;
-            display: flex;
-            justify-content: space-between;
+        
+        .error-stats {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px;
         }
         .error-card {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 15px;
+            background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .error-card.critical { border-left: 4px solid #dc2626; }
+        .error-card.warning { border-left: 4px solid #f59e0b; }
+        
+        .error-item {
+            background: white; padding: 15px; border-radius: 8px; margin-bottom: 10px;
             border-left: 4px solid #ef4444;
+            display: flex; justify-content: space-between;
+            cursor: pointer;
         }
-        .error-time {
-            color: #64748b;
-            font-size: 13px;
+        .error-item:hover { background: #f8f9fa; }
+        .error-time { color: #666; font-size: 0.9em; }
+        .error-msg { font-weight: 600; margin: 5px 0; }
+        .error-count { background: #ef4444; color: white; padding: 2px 8px; border-radius: 12px; font-size: 12px; }
+        
+        .resolve-btn {
+            background: #10b981; color: white; border: none; padding: 5px 15px;
+            border-radius: 6px; cursor: pointer;
         }
-        .error-message {
-            font-weight: 600;
-            margin: 8px 0;
-            color: #dc2626;
+        
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); align-items: center; justify-content: center;
         }
-        .error-user {
-            background: #f1f5f9;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 12px;
-        }
-        .menu-item {
-            padding: 12px 24px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            color: #cbd5e1;
-            text-decoration: none;
-        }
-        .menu-item.active {
-            background: #3b82f6;
-            color: white;
+        .modal-content {
+            background: white; padding: 30px; border-radius: 10px; width: 500px;
         }
     </style>
 </head>
 <body>
     <div class="sidebar">
-        <div class="sidebar-header">
-            <h2><i class="fas fa-shield-alt"></i> Admin Panel</h2>
-        </div>
-        <a href="admin-dashboard.html" class="menu-item"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
-        <a href="admin-users.html" class="menu-item"><i class="fas fa-users"></i> Users</a>
-        <a href="admin-logs.html" class="menu-item"><i class="fas fa-history"></i> Activity Logs</a>
-        <a href="admin-errors.html" class="menu-item active"><i class="fas fa-exclamation-triangle"></i> Errors</a>
-        <a href="admin-settings.html" class="menu-item"><i class="fas fa-cog"></i> Settings</a>
-        <a href="index.html" class="menu-item"><i class="fas fa-globe"></i> View Site</a>
+        <h3 style="margin-bottom: 30px;">Cloud<span style="color: #667eea;">Optima</span></h3>
+        <a href="admin-dashboard.html" class="nav-link">📊 Dashboard</a>
+        <a href="admin-users.html" class="nav-link">👥 Users</a>
+        <a href="admin-logs.html" class="nav-link">📋 Logs</a>
+        <a href="admin-errors.html" class="nav-link active">⚠️ Errors</a>
+        <a href="admin-settings.html" class="nav-link">⚙️ Settings</a>
     </div>
 
     <div class="main-content">
-        <div class="header">
-            <h2>⚠️ Error Logs</h2>
-            <button onclick="logout()" style="background: #ef4444; color: white; border: none; padding: 8px 20px; border-radius: 8px;">Logout</button>
+        <div class="top-bar">
+            <h2>Error Monitoring</h2>
+            <div>
+                <span id="adminDisplay">Admin</span>
+                <button onclick="logout()" style="margin-left: 15px; padding: 5px 10px;">Logout</button>
+            </div>
         </div>
 
-        <div class="error-card">
-            <div class="error-time">2026-02-17 10:30:45</div>
-            <div class="error-message">AWS connection failed - Invalid access key</div>
-            <div><span class="error-user">User: alice@example.com</span></div>
+        <div class="error-stats">
+            <div class="error-card critical">
+                <div style="font-size:28px; font-weight:700;" id="criticalCount">0</div>
+                <div>Critical Errors</div>
+            </div>
+            <div class="error-card warning">
+                <div style="font-size:28px; font-weight:700;" id="warningCount">0</div>
+                <div>Warnings</div>
+            </div>
+            <div class="error-card">
+                <div style="font-size:28px; font-weight:700;" id="resolvedCount">0</div>
+                <div>Resolved</div>
+            </div>
         </div>
 
-        <div class="error-card">
-            <div class="error-time">2026-02-17 09:15:22</div>
-            <div class="error-message">Database connection timeout</div>
-            <div><span class="error-user">System</span></div>
+        <div style="margin-bottom: 15px; display: flex; gap: 10px;">
+            <select id="errorFilter" style="padding:8px;">
+                <option value="all">All Errors</option>
+                <option value="critical">Critical</option>
+                <option value="warning">Warnings</option>
+                <option value="api">API Errors</option>
+                <option value="db">Database</option>
+            </select>
+            <button onclick="refreshErrors()" style="padding:8px 15px;">🔄 Refresh</button>
         </div>
 
-        <div class="error-card">
-            <div class="error-time">2026-02-17 08:45:10</div>
-            <div class="error-message">Brevo email API failed - Rate limit exceeded</div>
-            <div><span class="error-user">User: bob@example.com</span></div>
+        <div id="errorsList"></div>
+
+        <!-- Error Detail Modal -->
+        <div class="modal" id="errorModal">
+            <div class="modal-content">
+                <h3 id="errorModalTitle">Error Details</h3>
+                <div id="errorDetails" style="margin:20px 0;"></div>
+                <div style="text-align:right;">
+                    <button onclick="closeErrorModal()" style="padding:8px 15px;">Close</button>
+                    <button onclick="resolveError()" class="resolve-btn" style="margin-left:10px;">Mark Resolved</button>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
-        function logout() {
-            localStorage.removeItem('admin_logged_in');
-            window.location.replace('admin-login.html');
+        let errors = [];
+
+        // Generate sample errors
+        function generateErrors() {
+            errors = [
+                {id:1, type:'critical', message:'Database connection timeout', time:'2026-02-28 10:23', count:5, status:'open'},
+                {id:2, type:'warning', message:'API rate limit approaching 80%', time:'2026-02-28 09:15', count:2, status:'open'},
+                {id:3, type:'critical', message:'AWS credentials expiring in 3 days', time:'2026-02-28 08:30', count:1, status:'open'},
+                {id:4, type:'warning', message:'High CPU usage on main server', time:'2026-02-27 23:45', count:8, status:'open'},
+                {id:5, type:'api', message:'Brevo email API timeout', time:'2026-02-27 22:10', count:12, status:'resolved'}
+            ];
+            displayErrors();
+            updateStats();
         }
+
+        function displayErrors() {
+            const filter = document.getElementById('errorFilter').value;
+            const filtered = filter === 'all' ? errors : errors.filter(e => e.type === filter);
+            
+            const list = document.getElementById('errorsList');
+            if (filtered.length === 0) {
+                list.innerHTML = '<div style="background:white; padding:40px; text-align:center; border-radius:10px;">No errors found</div>';
+                return;
+            }
+            
+            list.innerHTML = filtered.map(e => `
+                <div class="error-item" onclick="showErrorDetail(${e.id})">
+                    <div style="flex:1">
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <span class="error-msg">${e.message}</span>
+                            <span class="error-count">${e.count}</span>
+                        </div>
+                        <span class="error-time">${e.time}</span>
+                    </div>
+                    ${e.status === 'open' ? 
+                        '<button class="resolve-btn" onclick="event.stopPropagation(); resolveError(${e.id})">Resolve</button>' : 
+                        '<span style="color:#10b981;">✓ Resolved</span>'}
+                </div>
+            `).join('');
+        }
+
+        function updateStats() {
+            document.getElementById('criticalCount').textContent = errors.filter(e => e.type === 'critical' && e.status === 'open').length;
+            document.getElementById('warningCount').textContent = errors.filter(e => e.type === 'warning' && e.status === 'open').length;
+            document.getElementById('resolvedCount').textContent = errors.filter(e => e.status === 'resolved').length;
+        }
+
+        function showErrorDetail(id) {
+            const error = errors.find(e => e.id === id);
+            if (error) {
+                document.getElementById('errorDetails').innerHTML = `
+                    <p><strong>Type:</strong> ${error.type}</p>
+                    <p><strong>Message:</strong> ${error.message}</p>
+                    <p><strong>Time:</strong> ${error.time}</p>
+                    <p><strong>Occurrences:</strong> ${error.count}</p>
+                    <p><strong>Status:</strong> ${error.status}</p>
+                    <p><strong>Stack Trace:</strong><br>Error at ${error.message} (simulated trace)</p>
+                `;
+                document.getElementById('errorModal').style.display = 'flex';
+            }
+        }
+
+        function closeErrorModal() {
+            document.getElementById('errorModal').style.display = 'none';
+        }
+
+        function resolveError(id) {
+            const error = errors.find(e => e.id === id);
+            if (error) {
+                error.status = 'resolved';
+                displayErrors();
+                updateStats();
+                closeErrorModal();
+            }
+        }
+
+        function refreshErrors() {
+            displayErrors();
+        }
+
+        function logout() {
+            localStorage.removeItem('adminUser');
+            window.location.href = 'admin-login.html';
+        }
+
+        document.getElementById('errorFilter').addEventListener('change', displayErrors);
+        generateErrors();
     </script>
 </body>
 </html>
