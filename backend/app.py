@@ -37,7 +37,7 @@ def get_db_connection():
         return None
 
 app = Flask(__name__)
-CORS(app, origins=['https://cloudoptima.vercel.app', 'http://localhost:5500', '*'])
+CORS(app, origins=['https://cloudoptima.vercel.app', 'http://localhost:5500', 'https://cloudoptima-api.onrender.com'])
 
 # Simple test route (no DB)
 @app.route('/simple-test')
