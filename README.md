@@ -1,1 +1,1 @@
-# Force deploy Sun Feb 15 06:34:39 UTC 2026
+CloudOptima is a multi-cloud cost optimization platform that helps organizations identify idle infrastructure and reduce unnecessary cloud spending through automated monitoring and alerting.
